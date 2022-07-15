@@ -1,0 +1,44 @@
+project:
+  name: quickstart-inductive-automation-ignition
+  owner: quickstart-eng@amazon.com
+  package_lambda: false
+  shorten_stack_name: true
+  regions:
+  - us-west-2
+  - ap-south-1
+  - eu-west-1
+  - eu-north-1
+  - us-east-1
+  - ca-central-1
+  - ap-northeast-1
+  - ap-southeast-1
+  - us-east-2
+  - eu-west-2
+  - eu-central-1
+  - us-west-1
+  - eu-west-3
+  parameters:
+    AvailabilityZones: $[taskcat_genaz_2]
+    DBEngineVersion: "12.4"
+    DBMasterUserPassword: $[taskcat_genpass_20A]
+    EnableEventSubscription: "false"
+    KeyPairName: $[taskcat_getkeypair]
+    QSS3BucketName: $[taskcat_autobucket]
+    QSS3BucketRegion: $[taskcat_current_region]
+    RemoteAccessCIDR: 10.0.0.0/16
+    IgnitionNodesDesiredCapacity: 1
+    IgnitionNodesMinSize: 1
+    OperatorEmail: override@example.com
+tests:
+  ignition-main-with-bastion:
+    parameters:
+      EnableBastion: "true"
+    template: ./templates/ignition-main.template.yaml
+    regions:
+      - us-west-1
+  ignition-main-no-bastion:
+    parameters:
+      EnableBastion: "false"
+    template: ./templates/ignition-main.template.yaml
+    regions:
+      - eu-west-1
