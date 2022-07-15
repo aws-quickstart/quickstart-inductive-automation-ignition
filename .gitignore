@@ -1,0 +1,5 @@
+.idea/
+*.iml
+.taskcat_overrides.yml
+.taskcat/
+taskcat_outputs
