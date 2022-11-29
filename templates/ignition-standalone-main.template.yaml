@@ -1,4 +1,5 @@
-Description: "This templates sets up standalone Ignition in a new AWS VPC"
+AWSTemplateFormatVersion: '2010-09-09'
+Description: "This templates sets up standalone Ignition in a new AWS VPC (qs-ign00lbf4)"
 Metadata:
   LICENSE: Apache License Version 2.0
   cfn-lint:

@@ -1,5 +1,5 @@
 AWSTemplateFormatVersion: '2010-09-09'
-Description: "This templates sets up an Ignition cluster in an existing AWS VPC"
+Description: "This templates sets up an Ignition cluster in an existing AWS VPC (qs-ign00lbf5)"
 Metadata:
   cfn-lint:
     config:
@@ -546,7 +546,7 @@ Resources:
     DependsOn: AuroraStack
     Properties:
       TemplateURL:
-        - !Sub
+        !Sub
         - 'https://${S3Bucket}.s3.${S3Region}.${AWS::URLSuffix}/${QSS3KeyPrefix}templates/ignition-ec2.template.yaml'
         - S3Region: !If [ UsingDefaultBucket, !Ref 'AWS::Region', !Ref QSS3BucketRegion ]
           S3Bucket: !If [ UsingDefaultBucket, !Sub '${QSS3BucketName}-${AWS::Region}', !Ref QSS3BucketName ]

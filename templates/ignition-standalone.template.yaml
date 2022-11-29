@@ -1,5 +1,5 @@
 AWSTemplateFormatVersion: '2010-09-09'
-Description: "This templates sets up a standalone Ignition in an existing AWS VPC"
+Description: "This templates sets up a standalone Ignition in an existing AWS VPC (qs-ign00lbf3)"
 Metadata:
   cfn-lint:
     config:

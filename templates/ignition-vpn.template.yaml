@@ -1,4 +1,5 @@
-Description: "This templates sets up an AWS Client VPN"
+AWSTemplateFormatVersion: '2010-09-09'
+Description: "This templates sets up an AWS Client VPN (qs-ign00lbf2)"
 Metadata:
   LICENSE: Apache License Version 2.0
   cfn-lint:

@@ -1,5 +1,5 @@
 AWSTemplateFormatVersion: '2010-09-09'
-Description: "This templates sets up Ignition software on an Amazon EC2 instance"
+Description: "This templates sets up Ignition software on an Amazon EC2 instance (qs-ign00lbfl)"
 Metadata:
   cfn-lint:
     config:
@@ -428,7 +428,7 @@ Resources:
                 Action: [
                     "acm:ImportCertificate"
                 ]
-                Resource: "*"
+                Resource: !Sub arn:${AWS::Partition}:acm:${AWS::Region}:${AWS::AccountId}:certificate/*
           PolicyName: aws-quick-start-acm-policy
   IgnitionInstanceRoleProfile:
     Type: AWS::IAM::InstanceProfile
