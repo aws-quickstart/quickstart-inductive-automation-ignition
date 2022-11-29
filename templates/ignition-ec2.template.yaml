@@ -1,0 +1,491 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: "This templates sets up Ignition software on an Amazon EC2 instance"
+Metadata:
+  cfn-lint:
+    config:
+      ignore_checks:
+        - E9101
+        - W9002
+        - W9003
+  LICENSE: Apache License Version 2.0
+  AWS::CloudFormation::Interface:
+    ParameterGroups:
+    - Label:
+        default: Stack
+      Parameters:
+      - ParentStackName
+    - Label:
+        default: Network Configuration
+      Parameters:
+      - VPCID
+      - KeyPairName
+      - SubnetCIDR
+      - SubnetID
+      - PrivateIPAddress
+      - GenerateClientVPNCerts
+    - Label:
+        default: EC2 Configuration
+      Parameters:
+      - IgnitionInstanceName
+      - IgnitionInstanceType
+      - LatestAmazonLinux2Id
+      - IgnitionSecurityGroupID
+    - Label:
+        default: Ignition Configuration
+      Parameters:
+      - LicenseAgreement
+      - IgnitionGatewayName
+      - IgnitionRootUsername
+      - IgnitionRootPassword
+      - IgnitionRootPassword2
+      - IgnitionRedundantMode
+      - IgnitionRedundantHostname
+      - IgnitionPostgreSQLHostname
+      - IgnitionPostgreSQLPort
+      - IgnitionPostgreSQLSchema
+      - IgnitionPostgreSQLUsername
+      - IgnitionPostgreSQLPassword
+      - IgnitionPostgreSQLPassword2
+      - IgnitionGANOutgoingHostname
+      - IgnitionGANOutgoingGatewayName
+      - IgnitionGANSecurityGatewayNames
+      - IgnitionGANInCertificateGatewayName
+      - IgnitionGANIncomingGatewayNameForRedundancy
+      - IgnitionGANIncomingIPAddressForRedundancy
+      - IgnitionGANIncomingHostnameForRedundancy
+      - IgnitionGANIncomingGatewayName1
+      - IgnitionGANIncomingIPAddress1
+      - IgnitionGANIncomingHostname1
+      - IgnitionGANIncomingGatewayName2
+      - IgnitionGANIncomingIPAddress2
+      - IgnitionGANIncomingHostname2
+      - EnablePublic
+    - Label:
+        default: Quick Start Configuration
+      Parameters:
+      - QSS3BucketName
+      - QSS3KeyPrefix
+    ParameterLabels:
+      ParentStackName:
+        default: Primary Cloud Formation stack name
+      IgnitionSecurityGroupID:
+        default: Ignition security group ID
+      QSS3BucketName:
+        default: Quick Start S3 bucket name
+      QSS3KeyPrefix:
+        default: Quick Start S3 key prefix
+      SubnetID:
+        default: Private subnet 1 ID
+      KeyPairName:
+        default: Key name
+      VPCID:
+        default: VPC ID
+      SubnetCIDR:
+        default: Subnet CIDR
+      PrivateIPAddress:
+        default: Private IP address
+      GenerateClientVPNCerts:
+        default: Generate Client VPN server/client certificates
+      LicenseAgreement:
+        default: IASLA Agreement
+      IgnitionInstanceName:
+        default: EC2 instance name
+      IgnitionInstanceType:
+        default: Ignition instance type
+      LatestAmazonLinux2Id:
+        default: Amazon Linux AMI ID
+      IgnitionGatewayName:
+        default: Ignition Gateway name
+      IgnitionRootUsername:
+        default: Ignition root account username
+      IgnitionRootPassword:
+        default: Ignition root account password
+      IgnitionRootPassword2:
+        default: Ignition root account password (verification)
+      IgnitionRedundantMode:
+        default: Ignition's redundancy mode
+      IgnitionRedundantHostname:
+        default: Hostname for Ignition master
+      IgnitionPostgreSQLHostname:
+        default: PostgreSQL hostname
+      IgnitionPostgreSQLPort:
+        default: PostgreSQL port
+      IgnitionPostgreSQLSchema:
+        default: PostgreSQL schema
+      IgnitionPostgreSQLUsername:
+        default: PostgreSQL username
+      IgnitionPostgreSQLPassword:
+        default: PostgreSQL password
+      IgnitionPostgreSQLPassword2:
+        default: PostgreSQL password (verification)
+      IgnitionGANOutgoingHostname:
+        default: Outgoing Gateway Network Hostname
+      IgnitionGANOutgoingGatewayName:
+        default: Outgoing Gateway Network Gateway Name
+      IgnitionGANSecurityGatewayNames:
+        default: Allowed Gateway Network Ignition Gateways
+      IgnitionGANInCertificateGatewayName:
+        default: Gateway Network Certificate Gateway Name
+      IgnitionGANIncomingGatewayNameForRedundancy:
+        default: Redundant Incoming Gateway Name
+      IgnitionGANIncomingIPAddressForRedundancy:
+        default: Redundant Incoming IP Address
+      IgnitionGANIncomingHostnameForRedundancy:
+        default: Redundant Incoming Hostname
+      IgnitionGANIncomingGatewayName1:
+        default: First Incoming Gateway Name
+      IgnitionGANIncomingIPAddress1:
+        default: First Incoming IP Address
+      IgnitionGANIncomingHostname1:
+        default: First Incoming Hostname
+      IgnitionGANIncomingGatewayName2:
+        default: Second Incoming Gateway Name
+      IgnitionGANIncomingIPAddress2:
+        default: Second Incoming IP Address
+      IgnitionGANIncomingHostname2:
+        default: Second Incoming Hostname
+      EnablePublic:
+        default: Provide public access to Ignition
+Parameters:
+  ParentStackName:
+    Type: String
+    Description: Primary Cloud Formation stack name
+    Default: IgnitionEC2Stack
+  LatestAmazonLinux2Id:
+    Type: AWS::SSM::Parameter::Value<AWS::EC2::Image::Id>
+    Default: /aws/service/ami-amazon-linux-latest/amzn2-ami-hvm-x86_64-gp2
+    Description: Latest Amazon Linux 2 AMI ID from AWS Systems Manager Parameter Store.
+  IgnitionSecurityGroupID:
+    Description: ID of the Ignition host security group to enable SSH connections.
+    Type: String
+  SubnetID:
+    Description: The ID of the private subnet.
+    Type: 'AWS::EC2::Subnet::Id'
+  SubnetCIDR:
+    AllowedPattern: ^(([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])\.){3}([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])(\/(1[6-9]|2[0-8]))$
+    ConstraintDescription: CIDR block parameter must be in the form x.x.x.x/16-28
+    Default: 10.0.0.0/19
+    Description: CIDR block for private subnet.
+    Type: String
+  VPCID:
+    Description: "ID of the VPC you are deploying into (e.g., vpc-0343606e)."
+    Type: 'AWS::EC2::VPC::Id'
+  PrivateIPAddress:
+    Default: 10.0.128.10
+    Description: EC2 private IP address
+    Type: String
+  GenerateClientVPNCerts:
+    AllowedValues:
+      - "true"
+      - "false"
+    Default: "false"
+    Description: "If true, the EC2 instance will use OpenSSL to generate client VPN server and client certificates."
+    Type: String  
+  KeyPairName:
+    ConstraintDescription: "Name of an existing EC2 key pair."
+    Description: Name of an existing public/private key pair, for connecting to your instance.
+    Type: "AWS::EC2::KeyPair::KeyName"
+  LicenseAgreement:
+    Description: I have read and agree to the license terms (IASLA) for Ignition by Inductive Automation (https://inductiveautomation.com/ignition/license).
+    Type: String
+    Default: '-'
+    AllowedValues:
+    - I agree
+    - '-'
+    ConstraintDescription: must answer 'I agree'
+  IgnitionInstanceType:
+    AllowedValues:
+      - t2.nano
+      - t2.micro
+      - t2.small
+      - t2.medium
+      - t2.large
+      - t2.xlarge
+      - t2.2xlarge
+      - t3.nano
+      - t3.micro
+      - t3.small
+      - t3.medium
+      - t3.large
+      - t3.xlarge
+      - t3.2xlarge
+      - m5.large
+      - m5.xlarge
+      - m5.2xlarge
+      - m5.4xlarge
+    ConstraintDescription: Must contain valid instance type
+    Default: m5.large
+    Description: Amazon EC2 instance type for the Ignition instances.
+    Type: String
+  IgnitionInstanceName:
+    Default: Ignition
+    Description: Amazon EC2 instance name.
+    Type: String
+  IgnitionGatewayName:
+    Default: Ignition
+    Description: Ignition's Gateway system name.
+    Type: String
+  IgnitionRootUsername:
+    Default: admin
+    Description: The username for the Ignition root account.
+    Type: String
+  IgnitionRootPassword:
+    AllowedPattern: >-
+      ^(?=^.{8,255}$)(?=.*[a-z])(?=.*[A-Z])(?=.*\d)((?=.*[^A-Za-z0-9])(?!.*[@/"'])).*$
+    ConstraintDescription: >-
+      Min 8 chars. Must include 1 uppercase, 1 lowercase, 1 number, 1 (non / @ " ') symbol
+    Description: The password for the Ignition root account.
+    MaxLength: 64
+    MinLength: 8
+    NoEcho: True
+    Type: String   
+  IgnitionRootPassword2:
+    AllowedPattern: >-
+      ^(?=^.{8,255}$)(?=.*[a-z])(?=.*[A-Z])(?=.*\d)((?=.*[^A-Za-z0-9])(?!.*[@/"'])).*$
+    ConstraintDescription: >-
+      Min 8 chars. Must include 1 uppercase, 1 lowercase, 1 number, 1 (non / @ " ') symbol
+    Description: The password for the Ignition root account (verification).
+    MaxLength: 64
+    MinLength: 8
+    NoEcho: True
+    Type: String  
+  IgnitionRedundantMode:
+    AllowedValues:
+      - "independent"
+      - "master"
+      - "backup"
+    Default: "independent"
+    Description: "Enable or disable redundancy, and specify this node's role"
+    Type: String
+  IgnitionRedundantHostname:
+    Description: The hostname of the master Ignition server. Only applicable when redundant mode is set to backup.
+    Type: String
+  IgnitionPostgreSQLHostname:
+    Description: The hostname of the PostgreSQL database to connect to. Leave blank for no initial database connection.
+    Type: String
+  IgnitionPostgreSQLPort:
+    Default: 5432
+    Description: The port for the PostgreSQL database.
+    Type: Number
+    ConstraintDescription: 'Must be in the range [1115-65535].'
+    MinValue: 1150
+    MaxValue: 65535
+  IgnitionPostgreSQLSchema:
+    Description: The PostgreSQL connection schema.
+    Type: String
+  IgnitionPostgreSQLUsername:
+    Description: The PostgreSQL connection username.
+    Type: String
+  IgnitionPostgreSQLPassword:
+    AllowedPattern: >-
+      ^(?=^.{8,255}$)(?=.*[a-z])(?=.*[A-Z])(?=.*\d)((?=.*[^A-Za-z0-9])(?!.*[@/"'])).*$
+    ConstraintDescription: >-
+      Min 8 chars. Must include 1 uppercase, 1 lowercase, 1 number, 1 (non / @ " ') symbol
+    Description: The PostgreSQL connection password.
+    MaxLength: 64
+    MinLength: 8
+    NoEcho: True
+    Type: String 
+  IgnitionPostgreSQLPassword2:
+    AllowedPattern: >-
+      ^(?=^.{8,255}$)(?=.*[a-z])(?=.*[A-Z])(?=.*\d)((?=.*[^A-Za-z0-9])(?!.*[@/"'])).*$
+    ConstraintDescription: >-
+      Min 8 chars. Must include 1 uppercase, 1 lowercase, 1 number, 1 (non / @ " ') symbol
+    Description: The PostgreSQL connection password (verification).
+    MaxLength: 64
+    MinLength: 8
+    NoEcho: True
+    Type: String 
+  IgnitionGANOutgoingHostname:
+    Description: The hostname of the Ignition server to create an outgoing Gateway Network connection. Leave blank for no initial connection.
+    Type: String
+  IgnitionGANOutgoingGatewayName:
+    Description: The Gateway Name of the Ignition server to create an outgoing Gateway Network connection. Leave blank for no initial connection.
+    Type: String
+  IgnitionGANSecurityGatewayNames:
+    Description: The Gateway Names (comma separated) for all allowed Ignition Gateways in the Gateway Network. Leave blank for no initial Gateways.
+    Type: String   
+  IgnitionGANInCertificateGatewayName:
+    Description: The Gateway Name to grab certificate and UUID from SSM parameter store. Leave blank to generate self signed certificate for Gateway Network.
+    Type: String   
+  IgnitionGANIncomingGatewayNameForRedundancy:
+    Description: The Gateway Name for redundant backup to auto approve. Leave blank to ignore.
+    Type: String 
+  IgnitionGANIncomingIPAddressForRedundancy:
+    Description: The private IP address for redundant backup to auto approve. Leave blank to ignore.
+    Type: String 
+  IgnitionGANIncomingHostnameForRedundancy:
+    Description: The private hostname for redundant backup to auto approve. Leave blank to ignore.
+    Type: String   
+  IgnitionGANIncomingGatewayName1:
+    Description: The first incoming Gateway Name to auto approve. Leave blank to ignore.
+    Type: String 
+  IgnitionGANIncomingIPAddress1:
+    Description: The first incoming private IP address to auto approve. Leave blank to ignore.
+    Type: String 
+  IgnitionGANIncomingHostname1:
+    Description: The first incoming private hostname to auto approve. Leave blank to ignore.
+    Type: String   
+  IgnitionGANIncomingGatewayName2:
+    Description: The second incoming Gateway Name to auto approve. Leave blank to ignore.
+    Type: String 
+  IgnitionGANIncomingIPAddress2:
+    Description: The second incoming private IP address to auto approve. Leave blank to ignore.
+    Type: String 
+  IgnitionGANIncomingHostname2:
+    Description: The second incoming private hostname to auto approve. Leave blank to ignore.
+    Type: String
+  EnablePublic:
+    AllowedValues:
+      - "true"
+      - "false"
+    Default: "true"
+    Description: "If true, the EC2 instance will have a public IP address."
+    Type: String  
+  QSS3BucketName:
+    AllowedPattern: "^[0-9a-zA-Z]+([0-9a-zA-Z-]*[0-9a-zA-Z])*$"
+    ConstraintDescription: "Quick Start bucket name can include numbers, lowercase letters, uppercase letters, and hyphens (-). It cannot start or end with a hyphen (-)."
+    Default: aws-quickstart
+    Description: "S3 bucket name for the Quick Start assets. Quick Start bucket name can include numbers, lowercase letters, uppercase letters, and hyphens (-). It cannot start or end with a hyphen (-)."
+    Type: String
+  QSS3KeyPrefix:
+    AllowedPattern: "^[0-9a-zA-Z-/]*$"
+    ConstraintDescription: "Quick Start key prefix can include numbers, lowercase letters, uppercase letters, hyphens (-), and forward slash (/)."
+    Default: quickstart-inductive-automation-ignition/
+    Description: "S3 key prefix for the Quick Start assets. Quick Start key prefix can include numbers, lowercase letters, uppercase letters, hyphens (-), and forward slash (/)."
+    Type: String
+Rules:
+  LicenseAgreementRule:
+    Assertions:
+    - Assert:
+        Fn::Contains:
+        - - I agree
+        - Ref: LicenseAgreement
+      AssertDescription: User must agree to the terms of the license agreement.
+  DBPasswordRule:
+    Assertions:
+    - Assert:
+        Fn::Equals:
+        - Ref: IgnitionPostgreSQLPassword
+        - Ref: IgnitionPostgreSQLPassword2
+      AssertDescription: PostgreSQL user passwords do not match.
+  IgnitionRootPasswordRule:
+    Assertions:
+    - Assert:
+        Fn::Equals:
+        - Ref: IgnitionRootPassword
+        - Ref: IgnitionRootPassword2
+      AssertDescription: Ignition root user passwords do not match.
+Conditions:
+  UsingDefaultBucket: !Equals [!Ref QSS3BucketName, 'aws-quickstart']
+  EnablePublicCondition:
+    !Equals
+    - !Ref EnablePublic
+    - "true"
+Resources:
+  IgnitionInstanceRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service:
+                - ec2.amazonaws.com
+            Action:
+              - sts:AssumeRole
+      Path: /
+      ManagedPolicyArns:
+        - !Sub 'arn:${AWS::Partition}:iam::aws:policy/AmazonSSMManagedInstanceCore'
+        - !Sub 'arn:${AWS::Partition}:iam::aws:policy/CloudWatchAgentServerPolicy'
+      Policies:
+        - PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Action:
+                  - s3:GetObject
+                Resource: !Sub
+                  - arn:${AWS::Partition}:s3:::${S3Bucket}/${QSS3KeyPrefix}*
+                  - S3Bucket: !If
+                      - UsingDefaultBucket
+                      - !Sub '${QSS3BucketName}-${AWS::Region}'
+                      - !Ref 'QSS3BucketName'
+                Effect: Allow
+          PolicyName: aws-quick-start-s3-policy
+        - PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Effect: Allow
+                Action: [
+                    "ssm:GetParameter", "ssm:PutParameter"
+                ]
+                Resource: !Sub arn:${AWS::Partition}:ssm:${AWS::Region}:${AWS::AccountId}:parameter/*
+          PolicyName: aws-quick-start-forge-ssm-policy
+        - PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Effect: Allow
+                Action: [
+                    "acm:ImportCertificate"
+                ]
+                Resource: "*"
+          PolicyName: aws-quick-start-acm-policy
+  IgnitionInstanceRoleProfile:
+    Type: AWS::IAM::InstanceProfile
+    Properties:
+      Path: /
+      Roles:
+        - !Ref 'IgnitionInstanceRole'
+  IgnitionEC2:
+    Type: AWS::EC2::Instance
+    Properties:
+      KeyName: !Ref 'KeyPairName'
+      ImageId: !Ref 'LatestAmazonLinux2Id'
+      Monitoring: true
+      IamInstanceProfile: !Ref 'IgnitionInstanceRoleProfile'
+      InstanceType: !Ref 'IgnitionInstanceType'
+      NetworkInterfaces: 
+        - AssociatePublicIpAddress: !Ref 'EnablePublic'
+          DeviceIndex: 0
+          GroupSet:
+            - !Ref 'IgnitionSecurityGroupID'
+          SubnetId: !Ref 'SubnetID'
+          PrivateIpAddress: !Ref PrivateIPAddress
+      Tags:
+        - Key: Name
+          Value: !Ref 'IgnitionInstanceName'
+      PropagateTagsToVolumeOnCreation: true
+      UserData: !Base64
+        Fn::Sub: |
+            #!/bin/bash
+            wget "http://files.inductiveautomation.com/aws-quick-starts/creation_v2.sh"
+            sudo chmod +x creation_v2.sh
+            sudo ./creation_v2.sh --stackname "${ParentStackName}" --gwname "${IgnitionGatewayName}" --gwusername "${IgnitionRootUsername}" --gwpassword "${IgnitionRootPassword}" --redundancyrole "${IgnitionRedundantMode}" --masterip "${IgnitionRedundantHostname}" --dbip "${IgnitionPostgreSQLHostname}" --dbport "${IgnitionPostgreSQLPort}" --dbschema "${IgnitionPostgreSQLSchema}" --dbusername "${IgnitionPostgreSQLUsername}" --dbpassword "${IgnitionPostgreSQLPassword}" --ganoutgoingip "${IgnitionGANOutgoingHostname}" --ganoutgoinggwname "${IgnitionGANOutgoingGatewayName}" --gansecuritygwnames "${IgnitionGANSecurityGatewayNames}" --gancertingwname "${IgnitionGANInCertificateGatewayName}" --ganincominggwname1 "${IgnitionGANIncomingGatewayNameForRedundancy}" --ganincomingip1 "${IgnitionGANIncomingIPAddressForRedundancy}" --ganincominghost1 "${IgnitionGANIncomingHostnameForRedundancy}" --ganincominggwname2 "${IgnitionGANIncomingGatewayName1}" --ganincomingip2 "${IgnitionGANIncomingIPAddress1}" --ganincominghost2 "${IgnitionGANIncomingHostname1}" --ganincominggwname3 "${IgnitionGANIncomingGatewayName2}" --ganincomingip3 "${IgnitionGANIncomingIPAddress2}" --ganincominghost3 "${IgnitionGANIncomingHostname2}" --generateclientvpncerts "${GenerateClientVPNCerts}"
+            sudo rm creation_v2.sh
+            /opt/aws/bin/cfn-signal -e $? --stack ${AWS::StackName} --resource IgnitionEC2 --region ${AWS::Region}
+    CreationPolicy:
+      ResourceSignal:
+        Count: 1
+        Timeout: "PT15M"
+Outputs:
+  InstanceId:
+    Description: "EC2 Instance ID"
+    Value: !Ref IgnitionEC2
+  IgnitionPrivateDnsName:
+    Description: "Private DNS name for Ignition's EC2 instance"
+    Value: !GetAtt IgnitionEC2.PrivateDnsName
+  IgnitionPrivateIP:
+    Description: "Private IP address for Ignition's EC2 instance"
+    Value: !GetAtt IgnitionEC2.PrivateIp
+  IgnitionPublicDnsName:
+    Description: "Public DNS name for Ignition's EC2 instance"
+    Value: !If
+      - EnablePublicCondition
+      - !GetAtt IgnitionEC2.PublicDnsName
+      - ''
+  IgnitionPublicIP:
+    Description: "Public IP address for Ignition's EC2 instance"
+    Value: !If
+      - EnablePublicCondition
+      - !GetAtt IgnitionEC2.PublicIp
+      - ''

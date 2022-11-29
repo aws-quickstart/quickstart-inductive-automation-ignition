@@ -1,0 +1,538 @@
+Description: "This templates sets up an Ignition cluster in a new AWS VPC"
+Metadata:
+  LICENSE: Apache License Version 2.0
+  cfn-lint:
+    config:
+      ignore_checks:
+        - E9101
+  AWS::CloudFormation::Interface:
+    ParameterGroups:
+    - Label:
+        default: Network Configuration
+      Parameters:
+      - KeyPairName
+      - AvailabilityZones
+    - Label:
+        default: Client VPN configuration
+      Parameters:
+       - EnableClientVPN
+    - Label:
+        default: Database Configuration
+      Parameters:
+      - DBName
+      - DBAutoMinorVersionUpgrade
+      - DBBackupRetentionPeriod
+      - DBEngineVersion
+      - DBInstanceClass
+      - DBMasterUsername
+      - DBMasterUserPassword
+      - DBMasterUserPassword2
+      - DBPort
+      - DBMultiAZ
+      - DBAllocatedStorageEncrypted
+      - DBExportLogToCloudwatch
+      - EnableEventSubscription
+      - NotificationList
+    - Label:
+        default: Ignition configuration
+      Parameters:
+      - LicenseAgreement
+      - IgnitionDomainName
+      - IgnitionInstanceType
+      - IgnitionRootUsername
+      - IgnitionRootPassword
+      - IgnitionRootPassword2
+    - Label:
+        default: Quick Start configuration
+      Parameters:
+      - QSS3BucketName
+      - QSS3BucketRegion
+      - QSS3KeyPrefix
+    ParameterLabels:
+      AvailabilityZones:
+        default: Availability Zones
+      EnableClientVPN:
+        default: Enable Client VPN
+      DBEngineVersion:
+        default: Database Engine Version
+      DBName:
+        default: Database name
+      DBAllocatedStorageEncrypted:
+        default: Database encryption enabled
+      DBExportLogToCloudwatch:
+        default: Export Database Log to Cloudwatch
+      DBAutoMinorVersionUpgrade:
+        default: Database auto minor version upgrade
+      DBBackupRetentionPeriod:
+        default: Database backup retention period
+      DBInstanceClass:
+        default: Database instance class
+      DBMasterUsername:
+        default: Database master username
+      DBMasterUserPassword:
+        default: Database master password
+      DBMasterUserPassword2:
+        default: Database master password (verification)
+      DBPort:
+        default: Database port
+      DBMultiAZ:
+        default: Multi-AZ deployment
+      QSS3BucketName:
+        default: Quick Start S3 bucket name
+      QSS3BucketRegion:
+        default: Quick Start S3 bucket region
+      QSS3KeyPrefix:
+        default: Quick Start S3 key prefix
+      EnableEventSubscription:
+        default: Enable Event Subscription
+      NotificationList:
+        default: SNS notification email
+      KeyPairName:
+        default: Key Name
+      LicenseAgreement:
+        default: IASLA Agreement
+      IgnitionDomainName:
+        default: Ignition domain name
+      IgnitionInstanceType:
+        default: Ignition instance type
+      IgnitionRootUsername:
+        default: Ignition root account username
+      IgnitionRootPassword:
+        default: Ignition root account password
+      IgnitionRootPassword2:
+        default: Ignition root account password (verification)
+Parameters:
+  AvailabilityZones:
+    Description: >-
+      List of Availability Zones to use for the subnets in the VPC. Only two
+      Availability Zones are used for this deployment, and the logical order of
+      your selections is preserved.
+    Type: 'List<AWS::EC2::AvailabilityZone::Name>'
+  KeyPairName:
+    ConstraintDescription: "Name of an existing EC2 key pair."
+    Description: Name of an existing public/private key pair, for connecting to your instance.
+    Type: "AWS::EC2::KeyPair::KeyName"
+  QSS3BucketName:
+    AllowedPattern: "^[0-9a-zA-Z]+([0-9a-zA-Z-]*[0-9a-zA-Z])*$"
+    ConstraintDescription: "Quick Start bucket name can include numbers, lowercase letters, uppercase letters, and hyphens (-). It cannot start or end with a hyphen (-)."
+    Default: aws-quickstart
+    Description: "S3 bucket name for the Quick Start assets. Quick Start bucket name can include numbers, lowercase letters, uppercase letters, and hyphens (-). It cannot start or end with a hyphen (-)."
+    Type: String
+  QSS3BucketRegion:
+    Default: 'us-east-1'
+    Description: 'The AWS Region where the Quick Start S3 bucket (QSS3BucketName) is hosted. When using your own bucket, you must specify this value.'
+    Type: String
+  QSS3KeyPrefix:
+    AllowedPattern: "^[0-9a-zA-Z-/]*$"
+    ConstraintDescription: "Quick Start key prefix can include numbers, lowercase letters, uppercase letters, hyphens (-), and forward slash (/)."
+    Default: quickstart-inductive-automation-ignition/
+    Description: "S3 key prefix for the Quick Start assets. Quick Start key prefix can include numbers, lowercase letters, uppercase letters, hyphens (-), and forward slash (/)."
+    Type: String
+  EnableClientVPN:
+    AllowedValues:
+      - "true"
+      - "false"
+    Default: "true"
+    Description: "If true, a client VPN stack will be created."
+    Type: String
+  DBAllocatedStorageEncrypted:
+    Default: "true"
+    AllowedValues:
+      - "true"
+      - "false"
+    Description: Whether or not to encrypt the database.
+    Type: String
+  DBExportLogToCloudwatch:
+    Default: "true"
+    AllowedValues:
+      - "true"
+      - "false"
+    Description: Whether or not to export Database logs to Cloudwatch
+    Type: String
+  DBAutoMinorVersionUpgrade:
+    AllowedValues:
+      - "true"
+      - "false"
+    Default: "false"
+    Description: "Select true to set up auto minor version upgrade."
+    Type: String
+  DBBackupRetentionPeriod:
+    Default: "35"
+    Description: "The number of days for which automatic database snapshots are retained."
+    Type: String
+  DBEngineVersion:
+    Description: Select Database Engine Version
+    Type: String
+    Default: 11.9
+    AllowedValues:
+      - 9.6.16
+      - 9.6.17
+      - 9.6.18
+      - 9.6.19
+      - 10.11
+      - 10.12
+      - 10.13
+      - 10.14
+      - 11.6
+      - 11.7
+      - 11.8
+      - 11.9
+      - 12.4
+  DBInstanceClass:
+    AllowedPattern: "db\\.[a-z0-9]*\\.[a-z0-9]*"
+    ConstraintDescription: "Must select a valid database instance type."
+    Default: db.r5.large
+    Description: "The name of the compute and memory capacity class of the database instance."
+    Type: String
+  DBMasterUserPassword:
+    AllowedPattern: "(?=^.{6,255}$)((?=.*\\d)(?=.*[A-Z])(?=.*[a-z])|(?=.*\\d)(?=.*[^A-Za-z0-9])(?=.*[a-z])|(?=.*[^A-Za-z0-9])(?=.*[A-Z])(?=.*[a-z])|(?=.*\\d)(?=.*[A-Z])(?=.*[^A-Za-z0-9]))^.*"
+    ConstraintDescription: "Min 8 chars."
+    Description: "The database admin account password."
+    MaxLength: "64"
+    MinLength: "8"
+    NoEcho: "True"
+    Type: String
+  DBMasterUserPassword2:
+    AllowedPattern: >-
+      ^(?=^.{8,255}$)(?=.*[a-z])(?=.*[A-Z])(?=.*\d)((?=.*[^A-Za-z0-9])(?!.*[@/"'])).*$
+    ConstraintDescription: >-
+      Min 8 chars. Must include 1 uppercase, 1 lowercase, 1 number, 1 (non / @ " ') symbol
+    Description: "The database admin account password (verification)."
+    MaxLength: "64"
+    MinLength: "8"
+    NoEcho: "True"
+    Type: String
+  DBMasterUsername:
+    AllowedPattern: "[a-zA-Z][a-zA-Z0-9]*"
+    ConstraintDescription: "Must begin with a letter and contain only alphanumeric characters."
+    Default: pgadmin
+    Description: "The database admin account username."
+    MaxLength: "16"
+    MinLength: "1"
+    Type: String
+  DBPort:
+    Default: 5432
+    Description: "The port the instance will listen for connections on."
+    Type: Number
+    ConstraintDescription: 'Must be in the range [1115-65535].'
+    MinValue: 1150
+    MaxValue: 65535
+  DBMultiAZ:
+    AllowedValues:
+      - "true"
+      - "false"
+    Default: "true"
+    Description: "Specifies if the database instance is a multiple Availability Zone deployment."
+    Type: String
+  DBName:
+    AllowedPattern: "[a-zA-Z][a-zA-Z0-9]*"
+    Default: 'AuroraPostgresDB'
+    Description: "Name of the Amazon Aurora database."
+    MaxLength: "64"
+    MinLength: "5"
+    Type: String
+  EnableEventSubscription:
+    AllowedValues:
+      - "true"
+      - "false"
+    Default: "true"
+    Description: "Enables event subscription to Notification List"
+    Type: String
+  NotificationList:
+    Type: String
+    Default: 'db-ops@domain.com'
+    Description: The Email notification is used to configure a SNS topic for sending cloudwatch alarm and RDS Event notifications
+    AllowedPattern: '^(([^<>()\[\]\\.,;:\s@"]+(\.[^<>()\[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$'
+    ConstraintDescription: provide a valid email address.
+  LicenseAgreement:
+    Description: I have read and agree to the license terms (IASLA) for Ignition by Inductive Automation (https://inductiveautomation.com/ignition/license).
+    Type: String
+    Default: '-'
+    AllowedValues:
+    - I agree
+    - '-'
+    ConstraintDescription: must answer 'I agree'
+  IgnitionDomainName:
+    Default: demo.acmeinc.com
+    Description: The public domain name to use for generating a SSL certificate on the load balancer
+    Type: String
+  IgnitionInstanceType:
+    AllowedValues:
+      - t2.nano
+      - t2.micro
+      - t2.small
+      - t2.medium
+      - t2.large
+      - t2.xlarge
+      - t2.2xlarge
+      - t3.nano
+      - t3.micro
+      - t3.small
+      - t3.medium
+      - t3.large
+      - t3.xlarge
+      - t3.2xlarge
+      - m5.large
+      - m5.xlarge
+      - m5.2xlarge
+      - m5.4xlarge
+    ConstraintDescription: Must contain valid instance type
+    Default: m5.large
+    Description: Amazon EC2 instance type for the Ignition instances.
+    Type: String
+  IgnitionRootUsername:
+    Default: admin
+    Description: The username for the Ignition root account.
+    Type: String
+  IgnitionRootPassword:
+    AllowedPattern: >-
+      ^(?=^.{8,255}$)(?=.*[a-z])(?=.*[A-Z])(?=.*\d)((?=.*[^A-Za-z0-9])(?!.*[@/"'])).*$
+    ConstraintDescription: >-
+      Min 8 chars. Must include 1 uppercase, 1 lowercase, 1 number, 1 (non / @ " ') symbol
+    Description: The password for the Ignition root account.
+    MaxLength: 64
+    MinLength: 8
+    NoEcho: True
+    Type: String       
+  IgnitionRootPassword2:
+    AllowedPattern: >-
+      ^(?=^.{8,255}$)(?=.*[a-z])(?=.*[A-Z])(?=.*\d)((?=.*[^A-Za-z0-9])(?!.*[@/"'])).*$
+    ConstraintDescription: >-
+      Min 8 chars. Must include 1 uppercase, 1 lowercase, 1 number, 1 (non / @ " ') symbol
+    Description: The password for the Ignition root account (verification).
+    MaxLength: 64
+    MinLength: 8
+    NoEcho: True
+    Type: String
+Rules:
+  LicenseAgreementRule:
+    Assertions:
+    - Assert:
+        Fn::Contains:
+        - - I agree
+        - Ref: LicenseAgreement
+      AssertDescription: User must agree to the terms of the license agreement.
+  DBPasswordRule:
+    Assertions:
+    - Assert:
+        Fn::Equals:
+        - Ref: DBMasterUserPassword
+        - Ref: DBMasterUserPassword2
+      AssertDescription: Database master user passwords do not match.
+  IgnitionRootPasswordRule:
+    Assertions:
+    - Assert:
+        Fn::Equals:
+        - Ref: IgnitionRootPassword
+        - Ref: IgnitionRootPassword2
+      AssertDescription: Ignition root user passwords do not match.
+Conditions:
+  EnableClientVPNAccess: !Equals
+    - !Ref EnableClientVPN
+    - "true"
+  UseDatabaseEncryption:
+    !Equals
+    - !Ref DBAllocatedStorageEncrypted
+    - "true"
+  UsingDefaultBucket: !Equals [!Ref QSS3BucketName, 'aws-quickstart']
+Resources:
+  ServerCertificateARN:
+    Type: AWS::SSM::Parameter
+    Condition: EnableClientVPNAccess
+    Properties:
+      Name: !Sub /${AWS::StackName}/clientvpncerts/serverarn
+      Description: Parameter to hold the server certificate ARN
+      Type: String
+      Value: '-'
+  ClientCertificateARN:
+    Type: AWS::SSM::Parameter
+    Condition: EnableClientVPNAccess
+    Properties:
+      Name: !Sub /${AWS::StackName}/clientvpncerts/clientarn
+      Description: Parameter to hold the client certificate ARN
+      Type: String
+      Value: '-'
+  CACert:
+    Type: AWS::SSM::Parameter
+    Condition: EnableClientVPNAccess
+    Properties:
+      Name: !Sub /${AWS::StackName}/clientvpncerts/cacert
+      Description: Parameter to hold the generated CA certificate
+      Type: String
+      Value: '-'
+  ClientKey:
+    Type: AWS::SSM::Parameter
+    Condition: EnableClientVPNAccess
+    Properties:
+      Name: !Sub /${AWS::StackName}/clientvpncerts/clientkey
+      Description: Parameter to hold the generated client key
+      Type: String
+      Value: '-'
+  ClientCert:
+    Type: AWS::SSM::Parameter
+    Condition: EnableClientVPNAccess
+    Properties:
+      Name: !Sub /${AWS::StackName}/clientvpncerts/clientcert
+      Description: Parameter to hold the generated client certificate
+      Type: String
+      Value: '-'
+  VPCStack:
+    Type: 'AWS::CloudFormation::Stack'
+    Properties:
+      TemplateURL:
+        !Sub
+        - 'https://${S3Bucket}.s3.${S3Region}.${AWS::URLSuffix}/${QSS3KeyPrefix}submodules/quickstart-aws-vpc/templates/aws-vpc.template.yaml'
+        - S3Region: !If [UsingDefaultBucket, !Ref 'AWS::Region', !Ref QSS3BucketRegion]
+          S3Bucket: !If [UsingDefaultBucket, !Sub '${QSS3BucketName}-${AWS::Region}', !Ref QSS3BucketName]
+      Parameters:
+        AvailabilityZones: !Join
+          - ','
+          - !Ref AvailabilityZones
+        NumberOfAZs: '2'
+        PrivateSubnet1ACIDR: 10.0.0.0/19
+        PrivateSubnet2ACIDR: 10.0.32.0/19
+        PublicSubnet1CIDR:  10.0.128.0/20
+        PublicSubnet2CIDR: 10.0.144.0/20
+        VPCCIDR: 10.0.0.0/16
+  IgnitionStack:
+    Type: 'AWS::CloudFormation::Stack'
+    DependsOn: VPCStack
+    Properties:
+      TemplateURL:
+        !Sub
+        - 'https://${S3Bucket}.s3.${S3Region}.${AWS::URLSuffix}/${QSS3KeyPrefix}templates/ignition-cluster.template.yaml'
+        - S3Region: !If [UsingDefaultBucket, !Ref 'AWS::Region', !Ref QSS3BucketRegion]
+          S3Bucket: !If [UsingDefaultBucket, !Sub '${QSS3BucketName}-${AWS::Region}', !Ref QSS3BucketName]
+      Parameters:
+        ParentStackName: !Ref 'AWS::StackName'
+        KeyPairName: !Ref KeyPairName
+        VPCID: !GetAtt
+          - VPCStack
+          - Outputs.VPCID
+        PrivateSubnet1ID:
+          Fn::GetAtt:
+            - VPCStack
+            - Outputs.PrivateSubnet1AID
+        PrivateSubnet2ID:
+          Fn::GetAtt:
+            - VPCStack
+            - Outputs.PrivateSubnet2AID
+        PublicSubnet1ID:
+          Fn::GetAtt:
+            - VPCStack
+            - Outputs.PublicSubnet1ID
+        PublicSubnet2ID:
+          Fn::GetAtt:
+            - VPCStack
+            - Outputs.PublicSubnet2ID
+        VPCCIDR: !GetAtt
+          - VPCStack
+          - Outputs.VPCCIDR
+        BackendPrimaryPrivateIPAddress: 10.0.0.10
+        BackendBackupPrivateIPAddress: 10.0.32.10
+        Frontend1PrivateIPAddress: 10.0.0.11
+        Frontend2PrivateIPAddress: 10.0.32.11
+        GenerateClientVPNCerts: !Ref EnableClientVPN
+        DBName: !Ref DBName
+        DBAutoMinorVersionUpgrade: !Ref DBAutoMinorVersionUpgrade
+        DBAllocatedStorageEncrypted: !Ref DBAllocatedStorageEncrypted
+        DBExportLogToCloudwatch: !Ref DBExportLogToCloudwatch
+        DBBackupRetentionPeriod: !Ref DBBackupRetentionPeriod
+        DBEngineVersion: !Ref DBEngineVersion
+        DBInstanceClass: !Ref DBInstanceClass
+        DBMasterUsername: !Ref DBMasterUsername
+        DBMasterUserPassword: !Ref DBMasterUserPassword
+        DBMasterUserPassword2: !Ref DBMasterUserPassword2
+        DBPort: !Ref DBPort
+        DBMultiAZ: !Ref DBMultiAZ
+        EnableEventSubscription: !Ref EnableEventSubscription
+        NotificationList: !Ref NotificationList
+        QSS3BucketName: !Ref QSS3BucketName
+        QSS3BucketRegion: !Ref QSS3BucketRegion
+        QSS3KeyPrefix: !Ref QSS3KeyPrefix
+        LicenseAgreement: !Ref LicenseAgreement
+        IgnitionDomainName: !Ref IgnitionDomainName
+        IgnitionInstanceType: !Ref IgnitionInstanceType
+        IgnitionRootUsername: !Ref IgnitionRootUsername
+        IgnitionRootPassword: !Ref IgnitionRootPassword
+        IgnitionRootPassword2: !Ref IgnitionRootPassword2
+  ClientVPNStack:
+    Condition: EnableClientVPNAccess
+    DependsOn: IgnitionStack
+    Type: 'AWS::CloudFormation::Stack'
+    Properties:
+      TemplateURL:
+        !Sub
+        - 'https://${S3Bucket}.s3.${S3Region}.${AWS::URLSuffix}/${QSS3KeyPrefix}templates/ignition-vpn.template.yaml'
+        - S3Region: !If [UsingDefaultBucket, !Ref 'AWS::Region', !Ref QSS3BucketRegion]
+          S3Bucket: !If [UsingDefaultBucket, !Sub '${QSS3BucketName}-${AWS::Region}', !Ref QSS3BucketName]
+      Parameters:
+        ParentStackName: !Ref 'AWS::StackName'
+        VPCID: !GetAtt
+          - VPCStack
+          - Outputs.VPCID
+        VPCCIDR: !GetAtt
+          - VPCStack
+          - Outputs.VPCCIDR
+        PrivateSubnet1ID: !GetAtt
+          - VPCStack
+          - Outputs.PrivateSubnet1AID
+        PrivateSubnet2ID: !GetAtt
+          - VPCStack
+          - Outputs.PrivateSubnet2AID
+        ClientSubnetCIDR: 10.192.0.0/22
+        ServerCertificateARN: !GetAtt ServerCertificateARN.Value
+        ClientCertificateARN: !GetAtt ClientCertificateARN.Value
+Outputs:
+  DBName:
+    Description: "Amazon Aurora database name"
+    Value: !Ref DBName
+  DBMasterUsername:
+    Description: "Amazon Aurora database master username"
+    Value: !GetAtt IgnitionStack.Outputs.DBMasterUsername
+  RDSEndPointAddress:
+    Description: "Amazon Aurora write endpoint"
+    Value: !GetAtt IgnitionStack.Outputs.RDSEndPointAddress
+  RDSReadEndPointAddress:
+    Description: "Amazon Aurora read endpoint"
+    Value: !GetAtt IgnitionStack.Outputs.RDSReadEndPointAddress
+  RDSEndPointPort:
+    Description: "Amazon Aurora port"
+    Value: !GetAtt IgnitionStack.Outputs.RDSEndPointPort
+  RDSEndPoints:
+    Description: "Full Amazon Aurora write endpoint"
+    Value: !GetAtt IgnitionStack.Outputs.RDSEndPoints
+  RDSEncryptionKey:
+    Condition: UseDatabaseEncryption
+    Description: The alias of the encryption key created for RDS
+    Value: !GetAtt IgnitionStack.Outputs.RDSEncryptionKey
+  IgnitionBackendPrimaryPrivateDnsName:
+    Description: "Private DNS name for Ignition's EC2 instance"
+    Value: !GetAtt IgnitionStack.Outputs.IgnitionBackendPrimaryPrivateDnsName
+  IgnitionBackendPrimaryPrivateIP:
+    Description: "Private IP address for Ignition's EC2 instance"
+    Value: !GetAtt IgnitionStack.Outputs.IgnitionBackendPrimaryPrivateIP
+  IgnitionBackendBackupPrivateDnsName:
+    Description: "Private DNS name for Ignition's EC2 instance"
+    Value: !GetAtt IgnitionStack.Outputs.IgnitionBackendBackupPrivateDnsName
+  IgnitionBackendBackupPrivateIP:
+    Description: "Private IP address for Ignition's EC2 instance"
+    Value: !GetAtt IgnitionStack.Outputs.IgnitionBackendBackupPrivateIP
+  IgnitionFrontend1PrivateDnsName:
+    Description: "Private DNS name for Ignition's EC2 instance"
+    Value: !GetAtt IgnitionStack.Outputs.IgnitionFrontend1PrivateDnsName
+  IgnitionFrontend1PrivateIP:
+    Description: "Private IP address for Ignition's EC2 instance"
+    Value: !GetAtt IgnitionStack.Outputs.IgnitionFrontend1PrivateIP
+  IgnitionFrontend2PrivateDnsName:
+    Description: "Private DNS name for Ignition's EC2 instance"
+    Value: !GetAtt IgnitionStack.Outputs.IgnitionFrontend2PrivateDnsName
+  IgnitionFrontend2PrivateIP:
+    Description: "Private IP address for Ignition's EC2 instance"
+    Value: !GetAtt IgnitionStack.Outputs.IgnitionFrontend2PrivateIP
+  IgnitionDomainName:
+    Description: Ignition domain name
+    Value: !GetAtt IgnitionStack.Outputs.IgnitionDomainName
+  IgnitionLoadBalancerARecord:
+    Description: A record for AWS Load Balancer
+    Value: !GetAtt IgnitionStack.Outputs.IgnitionLoadBalancerARecord

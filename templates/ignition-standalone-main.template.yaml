@@ -1,4 +1,4 @@
-Description: "This templates sets up Ignition software in a new AWS VPC (qs-1t7usc2it)"
+Description: "This templates sets up standalone Ignition in a new AWS VPC"
 Metadata:
   LICENSE: Apache License Version 2.0
   cfn-lint:
@@ -8,15 +8,10 @@ Metadata:
   AWS::CloudFormation::Interface:
     ParameterGroups:
     - Label:
-        default: Network configuration
+        default: Network Configuration
       Parameters:
       - KeyPairName
       - AvailabilityZones
-      - VPCCIDR
-      - PrivateSubnet1CIDR
-      - PrivateSubnet2CIDR
-      - PublicSubnet1CIDR
-      - PublicSubnet2CIDR
     - Label:
         default: Linux bastion configuration
       Parameters:
@@ -24,7 +19,7 @@ Metadata:
        - RemoteAccessCIDR
        - EnableTCPForwarding
     - Label:
-        default: Database configuration
+        default: Database Configuration
       Parameters:
       - DBName
       - DBAutoMinorVersionUpgrade
@@ -33,20 +28,23 @@ Metadata:
       - DBInstanceClass
       - DBMasterUsername
       - DBMasterUserPassword
+      - DBMasterUserPassword2
       - DBPort
+      - DBMultiAZ
       - DBAllocatedStorageEncrypted
       - DBExportLogToCloudwatch
-      - DBMultiAZ
       - EnableEventSubscription
       - NotificationList
     - Label:
         default: Ignition configuration
       Parameters:
+      - LicenseAgreement
       - IgnitionInstanceType
-      - IgnitionNodesMinSize
-      - IgnitionNodesDesiredCapacity
-      - IgnitionNodesMaxSize
-      - OperatorEmail
+      - IgnitionGatewayName
+      - IgnitionRootUsername
+      - IgnitionRootPassword
+      - IgnitionRootPassword2
+      - EnableIgnitionBackup
     - Label:
         default: Quick Start configuration
       Parameters:
@@ -56,6 +54,12 @@ Metadata:
     ParameterLabels:
       AvailabilityZones:
         default: Availability Zones
+      EnableBastion:
+        default: Create bastion stack
+      EnableTCPForwarding:
+        default: Enable TCP Forwarding
+      RemoteAccessCIDR:
+        default: Permitted IP range
       DBEngineVersion:
         default: Database Engine Version
       DBName:
@@ -74,95 +78,49 @@ Metadata:
         default: Database master username
       DBMasterUserPassword:
         default: Database master password
+      DBMasterUserPassword2:
+        default: Database master password (verification)
       DBPort:
         default: Database port
       DBMultiAZ:
         default: Multi-AZ deployment
-      EnableBastion:
-        default: Create bastion stack
-      EnableTCPForwarding:
-        default: Enable TCP Forwarding
-      PrivateSubnet1CIDR:
-        default: Private subnet 1 CIDR
-      PrivateSubnet2CIDR:
-        default: Private subnet 2 CIDR
-      PublicSubnet1CIDR:
-        default: Public subnet 1 CIDR
-      PublicSubnet2CIDR:
-        default: Public subnet 2 CIDR
       QSS3BucketName:
         default: Quick Start S3 bucket name
       QSS3BucketRegion:
         default: Quick Start S3 bucket region
       QSS3KeyPrefix:
         default: Quick Start S3 key prefix
-      VPCCIDR:
-        default: VPC CIDR
       EnableEventSubscription:
         default: Enable Event Subscription
       NotificationList:
         default: SNS notification email
       KeyPairName:
         default: Key Name
-      RemoteAccessCIDR:
-        default: Permitted IP range
+      LicenseAgreement:
+        default: IASLA Agreement
       IgnitionInstanceType:
         default: Ignition instance type
-      IgnitionNodesDesiredCapacity:
-        default: Ignition nodes desired capacity
-      IgnitionNodesMaxSize:
-        default: Ignition nodes max size
-      IgnitionNodesMinSize:
-        default: Ignition nodes min size
-      OperatorEmail:
-        default: Operator email
+      IgnitionGatewayName:
+        default: Ignition Gateway name
+      IgnitionRootUsername:
+        default: Ignition root account username
+      IgnitionRootPassword:
+        default: Ignition root account password
+      IgnitionRootPassword2:
+        default: Ignition root account password (verification)
+      EnableIgnitionBackup:
+        default: Enable Ignition's redundancy
 Parameters:
   AvailabilityZones:
-   Description: >-
+    Description: >-
       List of Availability Zones to use for the subnets in the VPC. Only two
       Availability Zones are used for this deployment, and the logical order of
       your selections is preserved.
-   Type: 'List<AWS::EC2::AvailabilityZone::Name>'
+    Type: 'List<AWS::EC2::AvailabilityZone::Name>'
   KeyPairName:
     ConstraintDescription: "Name of an existing EC2 key pair."
     Description: Name of an existing public/private key pair, for connecting to your instance.
     Type: "AWS::EC2::KeyPair::KeyName"
-  PrivateSubnet1CIDR:
-    AllowedPattern: ^(([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])\.){3}([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])(\/(1[6-9]|2[0-8]))$
-    ConstraintDescription: CIDR block parameter must be in the form x.x.x.x/16-28
-    Default: 10.0.0.0/19
-    Description: CIDR block for private subnet 1 located in Availability Zone 1.
-    Type: String
-  PrivateSubnet2CIDR:
-    AllowedPattern: ^(([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])\.){3}([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])(\/(1[6-9]|2[0-8]))$
-    ConstraintDescription: CIDR block parameter must be in the form x.x.x.x/16-28
-    Default: 10.0.32.0/19
-    Description: CIDR block for private subnet 2 located in Availability Zone 2.
-    Type: String
-  PublicSubnet1CIDR:
-    AllowedPattern: ^(([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])\.){3}([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])(\/(1[6-9]|2[0-8]))$
-    ConstraintDescription: CIDR block parameter must be in the form x.x.x.x/16-28
-    Default: 10.0.128.0/20
-    Description: CIDR block for the public subnet 1 located in Availability Zone 1.
-    Type: String
-  PublicSubnet2CIDR:
-    AllowedPattern: ^(([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])\.){3}([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])(\/(1[6-9]|2[0-8]))$
-    ConstraintDescription: CIDR block parameter must be in the form x.x.x.x/16-28
-    Default: 10.0.144.0/20
-    Description: CIDR block for the public subnet 2 located in Availability Zone 2.
-    Type: String
-  RemoteAccessCIDR:
-    AllowedPattern: "^(([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])\\.){3}([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])(\\/([0-9]|[1-2][0-9]|3[0-2]))$"
-    ConstraintDescription: "CIDR block parameter must be in the form x.x.x.x/x"
-    Description: "Allowed CIDR block for external SSH access."
-    Default: 10.0.0.0/16
-    Type: String
-  VPCCIDR:
-    AllowedPattern: ^(([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])\.){3}([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])(\/(1[6-9]|2[0-8]))$
-    ConstraintDescription: CIDR block parameter must be in the form x.x.x.x/16-28
-    Default: 10.0.0.0/16
-    Description: CIDR block for the VPC.
-    Type: String
   QSS3BucketName:
     AllowedPattern: "^[0-9a-zA-Z]+([0-9a-zA-Z-]*[0-9a-zA-Z])*$"
     ConstraintDescription: "Quick Start bucket name can include numbers, lowercase letters, uppercase letters, and hyphens (-). It cannot start or end with a hyphen (-)."
@@ -183,9 +141,22 @@ Parameters:
     AllowedValues:
       - "true"
       - "false"
-    Default: "true"
+    Default: "false"
     Description: "If true, a bastion stack will be created."
     Type: String
+  EnableTCPForwarding:
+    Type: String
+    Description: Enable/Disable TCP Forwarding
+    Default: 'false'
+    AllowedValues:
+      - 'true'
+      - 'false'
+  RemoteAccessCIDR:
+    AllowedPattern: "^(([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])\\.){3}([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])(\\/([0-9]|[1-2][0-9]|3[0-2]))$"
+    ConstraintDescription: "CIDR block parameter must be in the form x.x.x.x/x"
+    Description: "Allowed CIDR block for external SSH access."
+    Default: 0.0.0.0/0
+    Type: String  
   DBAllocatedStorageEncrypted:
     Default: "true"
     AllowedValues:
@@ -200,13 +171,6 @@ Parameters:
       - "false"
     Description: Whether or not to export Database logs to Cloudwatch
     Type: String
-  EnableTCPForwarding:
-    Type: String
-    Description: Enable/Disable TCP Forwarding
-    Default: 'false'
-    AllowedValues:
-      - 'true'
-      - 'false'
   DBAutoMinorVersionUpgrade:
     AllowedValues:
       - "true"
@@ -246,6 +210,16 @@ Parameters:
     AllowedPattern: "(?=^.{6,255}$)((?=.*\\d)(?=.*[A-Z])(?=.*[a-z])|(?=.*\\d)(?=.*[^A-Za-z0-9])(?=.*[a-z])|(?=.*[^A-Za-z0-9])(?=.*[A-Z])(?=.*[a-z])|(?=.*\\d)(?=.*[A-Z])(?=.*[^A-Za-z0-9]))^.*"
     ConstraintDescription: "Min 8 chars."
     Description: "The database admin account password."
+    MaxLength: "64"
+    MinLength: "8"
+    NoEcho: "True"
+    Type: String
+  DBMasterUserPassword2:
+    AllowedPattern: >-
+      ^(?=^.{8,255}$)(?=.*[a-z])(?=.*[A-Z])(?=.*\d)((?=.*[^A-Za-z0-9])(?!.*[@/"'])).*$
+    ConstraintDescription: >-
+      Min 8 chars. Must include 1 uppercase, 1 lowercase, 1 number, 1 (non / @ " ') symbol
+    Description: "The database admin account password (verification)."
     MaxLength: "64"
     MinLength: "8"
     NoEcho: "True"
@@ -292,6 +266,14 @@ Parameters:
     Description: The Email notification is used to configure a SNS topic for sending cloudwatch alarm and RDS Event notifications
     AllowedPattern: '^(([^<>()\[\]\\.,;:\s@"]+(\.[^<>()\[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$'
     ConstraintDescription: provide a valid email address.
+  LicenseAgreement:
+    Description: I have read and agree to the license terms (IASLA) for Ignition by Inductive Automation (https://inductiveautomation.com/ignition/license).
+    Type: String
+    Default: '-'
+    AllowedValues:
+    - I agree
+    - '-'
+    ConstraintDescription: must answer 'I agree'
   IgnitionInstanceType:
     AllowedValues:
       - t2.nano
@@ -316,27 +298,71 @@ Parameters:
     Default: m5.large
     Description: Amazon EC2 instance type for the Ignition instances.
     Type: String
-  IgnitionNodesDesiredCapacity:
-    Default: '2'
-    Description: The desired capacity for Ignition nodes in the Auto Scaling group.
+  IgnitionGatewayName:
+    AllowedPattern: "[a-zA-Z0-9]*"
+    Default: Ignition
+    Description: Ignition's Gateway system name.
     Type: String
-  IgnitionNodesMaxSize:
-    Default: '4'
-    Description: The maximum number of Ignition nodes in the Auto Scaling group.
+  IgnitionRootUsername:
+    Default: admin
+    Description: The username for the Ignition root account.
     Type: String
-  IgnitionNodesMinSize:
-    Default: '2'
-    Description: The minimum number of Ignition nodes in the Auto Scaling group.
+  IgnitionRootPassword:
+    AllowedPattern: >-
+      ^(?=^.{8,255}$)(?=.*[a-z])(?=.*[A-Z])(?=.*\d)((?=.*[^A-Za-z0-9])(?!.*[@/"'])).*$
+    ConstraintDescription: >-
+      Min 8 chars. Must include 1 uppercase, 1 lowercase, 1 number, 1 (non / @ " ') symbol
+    Description: The password for the Ignition root account.
+    MaxLength: 64
+    MinLength: 8
+    NoEcho: True
+    Type: String       
+  IgnitionRootPassword2:
+    AllowedPattern: >-
+      ^(?=^.{8,255}$)(?=.*[a-z])(?=.*[A-Z])(?=.*\d)((?=.*[^A-Za-z0-9])(?!.*[@/"'])).*$
+    ConstraintDescription: >-
+      Min 8 chars. Must include 1 uppercase, 1 lowercase, 1 number, 1 (non / @ " ') symbol
+    Description: The password for the Ignition root account (verification).
+    MaxLength: 64
+    MinLength: 8
+    NoEcho: True
+    Type: String  
+  EnableIgnitionBackup:
+    AllowedValues:
+      - "true"
+      - "false"
+    Default: "true"
+    Description: "If true, an Ignition backup EC2 instance will be created."
     Type: String
-  OperatorEmail:
-    AllowedPattern: ([a-zA-Z0-9_\-\.]+)@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.)|(([a-zA-Z0-9\-]+\.)+))([a-zA-Z]{2,4}|[0-9]{1,3})(\]?)
-    ConstraintDescription: Must be a valid email address.
-    Description: Email address that notifications of any scaling operations will be
-      sent to.
-    Type: String
+Rules:
+  LicenseAgreementRule:
+    Assertions:
+    - Assert:
+        Fn::Contains:
+        - - I agree
+        - Ref: LicenseAgreement
+      AssertDescription: User must agree to the terms of the license agreement.
+  DBPasswordRule:
+    Assertions:
+    - Assert:
+        Fn::Equals:
+        - Ref: DBMasterUserPassword
+        - Ref: DBMasterUserPassword2
+      AssertDescription: Database master user passwords do not match.
+  IgnitionRootPasswordRule:
+    Assertions:
+    - Assert:
+        Fn::Equals:
+        - Ref: IgnitionRootPassword
+        - Ref: IgnitionRootPassword2
+      AssertDescription: Ignition root user passwords do not match.
 Conditions:
   EnableBastionAccess: !Equals
     - !Ref EnableBastion
+    - "true"
+  UseDatabaseEncryption:
+    !Equals
+    - !Ref DBAllocatedStorageEncrypted
     - "true"
   UsingDefaultBucket: !Equals [!Ref QSS3BucketName, 'aws-quickstart']
 Resources:
@@ -344,35 +370,29 @@ Resources:
     Type: 'AWS::CloudFormation::Stack'
     Properties:
       TemplateURL:
-        Fn::Sub:
-          - 'https://${S3Bucket}.s3.${S3Region}.${AWS::URLSuffix}/${QSS3KeyPrefix}submodules/quickstart-aws-vpc/templates/aws-vpc.template.yaml'
-          - S3Region: !If
-              - UsingDefaultBucket
-              - !Ref AWS::Region
-              - !Ref QSS3BucketRegion
-            S3Bucket: !If
-              - UsingDefaultBucket
-              - !Sub '${QSS3BucketName}-${AWS::Region}'
-              - !Ref QSS3BucketName
+        !Sub
+        - 'https://${S3Bucket}.s3.${S3Region}.${AWS::URLSuffix}/${QSS3KeyPrefix}submodules/quickstart-aws-vpc/templates/aws-vpc.template.yaml'
+        - S3Region: !If [UsingDefaultBucket, !Ref 'AWS::Region', !Ref QSS3BucketRegion]
+          S3Bucket: !If [UsingDefaultBucket, !Sub '${QSS3BucketName}-${AWS::Region}', !Ref QSS3BucketName]
       Parameters:
         AvailabilityZones: !Join
           - ','
           - !Ref AvailabilityZones
         NumberOfAZs: '2'
-        PrivateSubnet1ACIDR: !Ref PrivateSubnet1CIDR
-        PrivateSubnet2ACIDR: !Ref PrivateSubnet2CIDR
-        PublicSubnet1CIDR: !Ref PublicSubnet1CIDR
-        PublicSubnet2CIDR: !Ref PublicSubnet2CIDR
-        VPCCIDR: !Ref VPCCIDR
+        PrivateSubnet1ACIDR: 10.0.0.0/19
+        PrivateSubnet2ACIDR: 10.0.32.0/19
+        PublicSubnet1CIDR:  10.0.128.0/20
+        PublicSubnet2CIDR: 10.0.144.0/20
+        VPCCIDR: 10.0.0.0/16
   BastionStack:
     Condition: EnableBastionAccess
     Type: 'AWS::CloudFormation::Stack'
     Properties:
       TemplateURL:
         !Sub
-          - 'https://${S3Bucket}.s3.${S3Region}.${AWS::URLSuffix}/${QSS3KeyPrefix}submodules/quickstart-linux-bastion/templates/linux-bastion.template'
-          - S3Region: !If [UsingDefaultBucket, !Ref 'AWS::Region', !Ref QSS3BucketRegion]
-            S3Bucket: !If [UsingDefaultBucket, !Sub '${QSS3BucketName}-${AWS::Region}', !Ref QSS3BucketName]
+        - 'https://${S3Bucket}.s3.${S3Region}.${AWS::URLSuffix}/${QSS3KeyPrefix}submodules/quickstart-linux-bastion/templates/linux-bastion.template'
+        - S3Region: !If [UsingDefaultBucket, !Ref 'AWS::Region', !Ref QSS3BucketRegion]
+          S3Bucket: !If [UsingDefaultBucket, !Sub '${QSS3BucketName}-${AWS::Region}', !Ref QSS3BucketName]
       Parameters:
         KeyPairName: !Ref KeyPairName
         PublicSubnet1ID: !GetAtt
@@ -391,34 +411,44 @@ Resources:
         QSS3KeyPrefix: !Sub ${QSS3KeyPrefix}submodules/quickstart-linux-bastion/
   IgnitionStack:
     Type: 'AWS::CloudFormation::Stack'
+    DependsOn: VPCStack
     Properties:
       TemplateURL:
         !Sub
-        - 'https://${S3Bucket}.s3.${S3Region}.${AWS::URLSuffix}/${QSS3KeyPrefix}templates/ignition-workload.template.yaml'
+        - 'https://${S3Bucket}.s3.${S3Region}.${AWS::URLSuffix}/${QSS3KeyPrefix}templates/ignition-standalone.template.yaml'
         - S3Region: !If [UsingDefaultBucket, !Ref 'AWS::Region', !Ref QSS3BucketRegion]
           S3Bucket: !If [UsingDefaultBucket, !Sub '${QSS3BucketName}-${AWS::Region}', !Ref QSS3BucketName]
       Parameters:
+        ParentStackName: !Ref 'AWS::StackName'
         KeyPairName: !Ref KeyPairName
         VPCID: !GetAtt
           - VPCStack
           - Outputs.VPCID
-        Subnet1ID:
+        PrivateSubnet1ID:
           Fn::GetAtt:
             - VPCStack
             - Outputs.PrivateSubnet1AID
-        Subnet2ID:
+        PrivateSubnet2ID:
           Fn::GetAtt:
             - VPCStack
             - Outputs.PrivateSubnet2AID
-        IgnitionInstanceType: !Ref IgnitionInstanceType
-        IgnitionNodesMinSize: !Ref IgnitionNodesMinSize
-        IgnitionNodesDesiredCapacity: !Ref IgnitionNodesDesiredCapacity
-        IgnitionNodesMaxSize: !Ref IgnitionNodesMaxSize
+        PublicSubnet1ID:
+          Fn::GetAtt:
+            - VPCStack
+            - Outputs.PublicSubnet1ID
+        PublicSubnet2ID:
+          Fn::GetAtt:
+            - VPCStack
+            - Outputs.PublicSubnet2ID
+        VPCCIDR: !GetAtt
+          - VPCStack
+          - Outputs.VPCCIDR
         BastionSecurityGroupID: !If
           - EnableBastionAccess
           - !GetAtt 'BastionStack.Outputs.BastionSecurityGroupID'
           - ''
-        OperatorEmail: !Ref OperatorEmail
+        PrimaryPrivateIPAddress: 10.0.128.10
+        BackupPrivateIPAddress: 10.0.144.10
         DBName: !Ref DBName
         DBAutoMinorVersionUpgrade: !Ref DBAutoMinorVersionUpgrade
         DBAllocatedStorageEncrypted: !Ref DBAllocatedStorageEncrypted
@@ -428,11 +458,66 @@ Resources:
         DBInstanceClass: !Ref DBInstanceClass
         DBMasterUsername: !Ref DBMasterUsername
         DBMasterUserPassword: !Ref DBMasterUserPassword
+        DBMasterUserPassword2: !Ref DBMasterUserPassword2
         DBPort: !Ref DBPort
         DBMultiAZ: !Ref DBMultiAZ
-        VPCCIDR: !Ref VPCCIDR
         EnableEventSubscription: !Ref EnableEventSubscription
         NotificationList: !Ref NotificationList
         QSS3BucketName: !Ref QSS3BucketName
         QSS3BucketRegion: !Ref QSS3BucketRegion
         QSS3KeyPrefix: !Ref QSS3KeyPrefix
+        LicenseAgreement: !Ref LicenseAgreement
+        IgnitionInstanceType: !Ref IgnitionInstanceType
+        IgnitionGatewayName: !Ref IgnitionGatewayName
+        IgnitionRootUsername: !Ref IgnitionRootUsername
+        IgnitionRootPassword: !Ref IgnitionRootPassword
+        IgnitionRootPassword2: !Ref IgnitionRootPassword2
+        EnableIgnitionBackup: !Ref EnableIgnitionBackup
+        EnablePublic: true
+Outputs:
+  DBName:
+    Description: "Amazon Aurora database name"
+    Value: !Ref DBName
+  DBMasterUsername:
+    Description: "Amazon Aurora database master username"
+    Value: !GetAtt IgnitionStack.Outputs.DBMasterUsername
+  RDSEndPointAddress:
+    Description: "Amazon Aurora write endpoint"
+    Value: !GetAtt IgnitionStack.Outputs.RDSEndPointAddress
+  RDSReadEndPointAddress:
+    Description: "Amazon Aurora read endpoint"
+    Value: !GetAtt IgnitionStack.Outputs.RDSReadEndPointAddress
+  RDSEndPointPort:
+    Description: "Amazon Aurora port"
+    Value: !GetAtt IgnitionStack.Outputs.RDSEndPointPort
+  RDSEndPoints:
+    Description: "Full Amazon Aurora write endpoint"
+    Value: !GetAtt IgnitionStack.Outputs.RDSEndPoints
+  RDSEncryptionKey:
+    Condition: UseDatabaseEncryption
+    Description: The alias of the encryption key created for RDS
+    Value: !GetAtt IgnitionStack.Outputs.RDSEncryptionKey
+  IgnitionPrimaryPrivateDnsName:
+    Description: "Private DNS name for Ignition's EC2 instance"
+    Value: !GetAtt IgnitionStack.Outputs.IgnitionPrimaryPrivateDnsName
+  IgnitionPrimaryPrivateIP:
+    Description: "Private IP address for Ignition's EC2 instance"
+    Value: !GetAtt IgnitionStack.Outputs.IgnitionPrimaryPrivateIP
+  IgnitionPrimaryPublicDnsName:
+    Description: "Public DNS name for Ignition's EC2 instance"
+    Value: !GetAtt IgnitionStack.Outputs.IgnitionPrimaryPublicDnsName
+  IgnitionPrimaryPublicIP:
+    Description: "Public IP address for Ignition's EC2 instance"
+    Value: !GetAtt IgnitionStack.Outputs.IgnitionPrimaryPublicIP
+  IgnitionBackupPrivateDnsName:
+    Description: "Private DNS name for Ignition's EC2 instance"
+    Value: !GetAtt IgnitionStack.Outputs.IgnitionBackupPrivateDnsName
+  IgnitionBackupPrivateIP:
+    Description: "Private IP address for Ignition's EC2 instance"
+    Value: !GetAtt IgnitionStack.Outputs.IgnitionBackupPrivateIP
+  IgnitionBackupPublicDnsName:
+    Description: "Public DNS name for Ignition's EC2 instance"
+    Value: !GetAtt IgnitionStack.Outputs.IgnitionBackupPublicDnsName
+  IgnitionBackupPublicIP:
+    Description: "Public IP address for Ignition's EC2 instance"
+    Value: !GetAtt IgnitionStack.Outputs.IgnitionBackupPublicIP

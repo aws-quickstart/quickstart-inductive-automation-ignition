@@ -1,0 +1,126 @@
+Description: "This templates sets up an AWS Client VPN"
+Metadata:
+  LICENSE: Apache License Version 2.0
+  cfn-lint:
+    config:
+      ignore_checks:
+        - E9101
+  AWS::CloudFormation::Interface:
+    ParameterGroups:
+    - Label:
+        default: Parent Stack
+      Parameters:
+      - ParentStackName
+    - Label:
+        default: Certificates
+      Parameters:
+      - ServerCertificateARN
+      - ClientCertificateARN
+    - Label:
+        default: Network Configuration
+      Parameters:
+      - VPCID
+      - VPCCIDR
+      - PrivateSubnet1ID
+      - PrivateSubnet2ID
+      - ClientSubnetCIDR
+    ParameterLabels:
+      ParentStackName:
+        default: Parent stack name
+      ServerCertificateARN:
+        default: Server certificate ARN
+      ClientCertificateARN:
+        default: Client certificate ARN
+      VPCID:
+        default: VPC ID
+      VPCCIDR:
+        default: VPC CIDR
+      PrivateSubnet1ID:
+        default: Private subnet 1 ID
+      PrivateSubnet2ID:
+        default: Private subnet 2 ID
+      ClientSubnetCIDR:
+        default: Subnet CIDR
+Parameters:
+  ParentStackName:
+    Description: The name of the parent stack
+    Type: String
+    Default: 'ClientVPNStack'
+  ServerCertificateARN:
+    Description: Client VPN server certificate ARN
+    Type: String
+  ClientCertificateARN:
+    Description: Client VPN client certificate ARN
+    Type: String
+  VPCID:
+    Description: "ID of the VPC you are deploying into (e.g., vpc-0343606e)."
+    Type: 'AWS::EC2::VPC::Id'
+  VPCCIDR:
+    AllowedPattern: ^(([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])\.){3}([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])(\/(1[6-9]|2[0-8]))$
+    ConstraintDescription: CIDR block parameter must be in the form x.x.x.x/16-28
+    Default: 10.0.0.0/16
+    Description: CIDR block of the existing VPC.
+    Type: String
+  PrivateSubnet1ID:
+    Description: The ID of the private subnet in Availability Zone 1.
+    Type: 'AWS::EC2::Subnet::Id'
+  PrivateSubnet2ID:
+    Description: The ID of the private subnet in Availability Zone 2.
+    Type: 'AWS::EC2::Subnet::Id'
+  ClientSubnetCIDR:
+    AllowedPattern: ^(([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])\.){3}([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])(\/(1[6-9]|2[0-8]))$
+    ConstraintDescription: CIDR block parameter must be in the form x.x.x.x/16-28
+    Default: 10.192.0.0/22
+    Description: CIDR block for client VPN
+    Type: String
+Resources:
+  ClientVPNSecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: Allow access to the Client VPN
+      VpcId: !Ref 'VPCID'
+  ClientVPNEndpointLogsGroup:
+    Type: AWS::Logs::LogGroup
+  ClientVpnEndpoint:
+    Type: 'AWS::EC2::ClientVpnEndpoint'
+    Properties:
+      AuthenticationOptions:
+        - Type: "certificate-authentication"
+          MutualAuthentication:
+            ClientRootCertificateChainArn: !Ref ClientCertificateARN
+      ClientCidrBlock: !Ref ClientSubnetCIDR
+      ClientConnectOptions:
+        Enabled: false
+      ConnectionLogOptions: 
+        Enabled: true
+        CloudwatchLogGroup: !Ref ClientVPNEndpointLogsGroup
+      Description: "Client VPN"
+      SecurityGroupIds:
+        - !GetAtt ClientVPNSecurityGroup.GroupId
+      ServerCertificateArn: !Ref ServerCertificateARN
+      SplitTunnel: true
+      TagSpecifications:
+        - ResourceType: "client-vpn-endpoint"
+          Tags:
+          - Key: Name
+            Value: ClientVPN
+      TransportProtocol: udp
+      VpcId: !Ref VPCID
+      VpnPort: 443
+  EgressVPCSubnet1Association:
+    Type: AWS::EC2::ClientVpnTargetNetworkAssociation
+    Properties:
+      ClientVpnEndpointId: !Ref ClientVpnEndpoint
+      SubnetId: !Ref PrivateSubnet1ID
+  EgressVPCSubnet2Association:
+    Type: AWS::EC2::ClientVpnTargetNetworkAssociation
+    Properties:
+      ClientVpnEndpointId: !Ref ClientVpnEndpoint
+      SubnetId: !Ref PrivateSubnet2ID
+  AuthoriseVPCRule:
+    Type: AWS::EC2::ClientVpnAuthorizationRule
+    Properties: 
+      AuthorizeAllGroups: true
+      ClientVpnEndpointId: !Ref ClientVpnEndpoint
+      Description: "Authorise VPC"
+      TargetNetworkCidr: !Ref VPCCIDR
