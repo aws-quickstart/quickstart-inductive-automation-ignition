@@ -6,12 +6,10 @@ Metadata:
     config:
       ignore_checks:
         - E9101
+        - W9002
+        - W9003
   AWS::CloudFormation::Interface:
     ParameterGroups:
-    - Label:
-        default: Parent Stack
-      Parameters:
-      - ParentStackName
     - Label:
         default: Certificates
       Parameters:
@@ -26,8 +24,6 @@ Metadata:
       - PrivateSubnet2ID
       - ClientSubnetCIDR
     ParameterLabels:
-      ParentStackName:
-        default: Parent stack name
       ServerCertificateARN:
         default: Server certificate ARN
       ClientCertificateARN:
@@ -43,10 +39,6 @@ Metadata:
       ClientSubnetCIDR:
         default: Subnet CIDR
 Parameters:
-  ParentStackName:
-    Description: The name of the parent stack
-    Type: String
-    Default: 'ClientVPNStack'
   ServerCertificateARN:
     Description: Client VPN server certificate ARN
     Type: String

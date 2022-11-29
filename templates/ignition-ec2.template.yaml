@@ -1,13 +1,13 @@
 AWSTemplateFormatVersion: '2010-09-09'
 Description: "This templates sets up Ignition software on an Amazon EC2 instance (qs-ign00lbfl)"
 Metadata:
+  LICENSE: Apache License Version 2.0
   cfn-lint:
     config:
       ignore_checks:
         - E9101
         - W9002
         - W9003
-  LICENSE: Apache License Version 2.0
   AWS::CloudFormation::Interface:
     ParameterGroups:
     - Label:
@@ -17,9 +17,7 @@ Metadata:
     - Label:
         default: Network Configuration
       Parameters:
-      - VPCID
       - KeyPairName
-      - SubnetCIDR
       - SubnetID
       - PrivateIPAddress
       - GenerateClientVPNCerts
@@ -78,10 +76,6 @@ Metadata:
         default: Private subnet 1 ID
       KeyPairName:
         default: Key name
-      VPCID:
-        default: VPC ID
-      SubnetCIDR:
-        default: Subnet CIDR
       PrivateIPAddress:
         default: Private IP address
       GenerateClientVPNCerts:
@@ -161,15 +155,6 @@ Parameters:
   SubnetID:
     Description: The ID of the private subnet.
     Type: 'AWS::EC2::Subnet::Id'
-  SubnetCIDR:
-    AllowedPattern: ^(([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])\.){3}([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])(\/(1[6-9]|2[0-8]))$
-    ConstraintDescription: CIDR block parameter must be in the form x.x.x.x/16-28
-    Default: 10.0.0.0/19
-    Description: CIDR block for private subnet.
-    Type: String
-  VPCID:
-    Description: "ID of the VPC you are deploying into (e.g., vpc-0343606e)."
-    Type: 'AWS::EC2::VPC::Id'
   PrivateIPAddress:
     Default: 10.0.128.10
     Description: EC2 private IP address

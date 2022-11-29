@@ -1,11 +1,13 @@
 AWSTemplateFormatVersion: '2010-09-09'
 Description: "This templates sets up a standalone Ignition in an existing AWS VPC (qs-ign00lbf3)"
 Metadata:
+  LICENSE: Apache License Version 2.0
   cfn-lint:
     config:
       ignore_checks:
         - E9101
-  LICENSE: Apache License Version 2.0
+        - W9002
+        - W9003
   AWS::CloudFormation::Interface:
     ParameterGroups:
     - Label:
