@@ -1,3 +1,34 @@
-//Include any predeployment steps here, such as signing up for a Marketplace AMI or making any changes to a partner account. If there are no predeployment steps, leave this file empty.
-
 == Predeployment steps
+=== Sign in to your AWS account
+
+. Sign in to your AWS account at https://aws.amazon.com with an IAM user role that has the necessary permissions.
+. Use the Region selector in the navigation bar to choose the AWS Region where you want to deploy {partner-product-short-name} on AWS.
+
+=== Get an Amazon EC2 key pair
+Ensure that at least one Amazon EC2 key pair exists in your AWS account in the Region where you plan to deploy the Quick Start. Note the key-pair name because you will use it during deployment. To create a key pair, see https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/ec2-key-pairs.html[Amazon EC2 key pairs and Linux instances^].
+
+For testing or proof-of-concept purposes, we recommend creating a new key pair instead of using one that’s already being used by a production instance.
+
+=== Launch the Quick Start
+
+NOTE: You are responsible for the cost of the AWS services used while running this Quick Start reference deployment. There is no additional cost for using this Quick Start. For full details, see the pricing pages for each AWS service used by this Quick Start. Prices are subject to change.
+
+. Sign in to your AWS account, and choose one of the following options to launch the AWS CloudFormation template. For help with choosing an option, see link:#_deployment_options[deployment options], earlier in this guide.
+
+The standalone deployment takes about {deployment_time_standalone} to complete. The cluster deployment takes about {deployment_time_cluster} to complete.
+
+[start=2]
+. Check the AWS Region that’s displayed in the upper-right corner of the navigation bar, and change it if necessary. This is where the network infrastructure for {partner-product-short-name} is built. The template is launched in the {default_deployment_region} Region by default.
+. On the *Create stack* page, keep the default setting for the template URL, and then choose *Next*.
+. On the *Specify stack details* page, specify the stack name. Review the template parameters, and provide values for any parameters that require input. For all other parameters, review the default settings, and customize them as necessary.
+. Select your AWS EC2 key pair.
+. Select two Availability Zones used for this deployment.
+. Provide a PostgreSQL database master password.
+. Provide a SNS notification email for cloudwatch alarms and RDS event notifications.
+. Agree to the IASLA (https://inductiveautomation.com/ignition/license[see details^]).
+. Provide an Ignition root account and password.
+. If you are using a *cluster* deployment, you can provide your own domain name to use for the load balancer. The template will use the domain name to generate a trusted Amazon SSL certificate. The template will send the administrator of the domain an email to verify ownership. Make sure to approve the certificate while the template is loading. Upon completion, make sure to set up a CNAME DNS record to the generated ELB domain name from the Outputs tab. If you do not want to specify a domain name, use Amazon generated ELB domain name in the Outputs tab.
+. When you finish reviewing and customizing the parameters, choose *Next*.
+. On the *Configure stack options* page, you can specify tags (key-value pairs) for resources in your stack and set advanced options. When you finish, choose *Next*.
+. On the Review page, review and confirm the template settings. Under *Capabilities*, select the two check boxes to acknowledge that the template creates IAM resources and might require the ability to automatically expand macros. Choose *Create stack* to deploy the stack.
+. Monitor the status of the stack. When the status is *CREATE_COMPLETE*, the {partner-product-short-name} deployment is ready. To view the created resources, see the values displayed in the Outputs tab for the stack.
