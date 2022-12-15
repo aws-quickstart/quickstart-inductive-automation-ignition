@@ -167,21 +167,12 @@ Parameters:
   DBEngineVersion:
     Description: Select Database Engine Version
     Type: String
-    Default: 11.9
+    Default: 12.12
     AllowedValues:
-      - 9.6.16
-      - 9.6.17
-      - 9.6.18
-      - 9.6.19
-      - 10.11
-      - 10.12
-      - 10.13
-      - 10.14
-      - 11.6
-      - 11.7
-      - 11.8
-      - 11.9
-      - 12.4
+      - 11.17
+      - 12.12
+      - 13.8
+      - 14.5
   DBInstanceClass:
     AllowedPattern: "db\\.[a-z0-9]*\\.[a-z0-9]*"
     ConstraintDescription: "Must select a valid database instance type."
@@ -326,7 +317,7 @@ Parameters:
     MaxLength: 64
     MinLength: 8
     NoEcho: True
-    Type: String    
+    Type: String
   IgnitionRootPassword2:
     AllowedPattern: >-
       ^(?=^.{8,255}$)(?=.*[a-z])(?=.*[A-Z])(?=.*\d)((?=.*[^A-Za-z0-9])(?!.*[@/"'])).*$
@@ -336,7 +327,7 @@ Parameters:
     MaxLength: 64
     MinLength: 8
     NoEcho: True
-    Type: String  
+    Type: String
   EnableIgnitionBackup:
     AllowedValues:
       - "true"
@@ -350,7 +341,7 @@ Parameters:
       - "false"
     Default: "true"
     Description: "If true, the EC2 instance will have a public IP address."
-    Type: String  
+    Type: String
   EnableEventSubscription:
     AllowedValues:
       - "true"
@@ -419,7 +410,7 @@ Resources:
   GWUUID:
     Type: AWS::SSM::Parameter
     Properties:
-      Name: !Sub 
+      Name: !Sub
             - /${ParentStackName}/${gwname}/gwuuid
             - gwname: !Ref IgnitionGatewayName
       Description: Parameter to hold the Ignition redundant backup UUID
@@ -428,7 +419,7 @@ Resources:
   GWCert:
     Type: AWS::SSM::Parameter
     Properties:
-      Name: !Sub 
+      Name: !Sub
             - /${ParentStackName}/${gwname}/gwcert
             - gwname: !Ref IgnitionGatewayName
       Description: Parameter to hold the Ignition redundant backup certificate
@@ -437,7 +428,7 @@ Resources:
   GWKey:
     Type: AWS::SSM::Parameter
     Properties:
-      Name: !Sub 
+      Name: !Sub
             - /${ParentStackName}/${gwname}/gwkey
             - gwname: !Ref IgnitionGatewayName
       Description: Parameter to hold the Ignition redundant backup private key
@@ -545,7 +536,7 @@ Resources:
           - ''
         IgnitionGANIncomingHostnameForRedundancy: !If
           - EnableIgnitionBackupCondition
-          - !Sub 
+          - !Sub
             - 'ip-${iptohost}.${AWS::Region}.compute.internal'
             - iptohost: !Join [ '-', !Split [ '.', !Ref BackupPrivateIPAddress ] ]
           - ''

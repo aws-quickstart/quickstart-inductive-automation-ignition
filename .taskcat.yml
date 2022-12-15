@@ -19,9 +19,14 @@ project:
   - eu-west-3
   parameters:
     AvailabilityZones: $[taskcat_genaz_2]
-    DBEngineVersion: "12.4"
-    DBMasterUserPassword: $[taskcat_genpass_20A]
+    DBEngineVersion: "12.12"
+    DBMasterUserPassword: "$[taskcat_genpass_15A]!"
+    DBMasterUserPassword2: "$[taskcat_getval_DBMasterUserPassword]"
+    IgnitionRootPassword: "$[taskcat_getval_DBMasterUserPassword]"
+    IgnitionRootPassword2: "$[taskcat_getval_DBMasterUserPassword]"
     EnableEventSubscription: "false"
+    NotificationList: test@example.com
+    LicenseAgreement: "I agree"
     KeyPairName: $[taskcat_getkeypair]
     QSS3BucketName: $[taskcat_autobucket]
     QSS3BucketRegion: $[taskcat_current_region]
@@ -30,15 +35,17 @@ project:
     IgnitionNodesMinSize: 1
     OperatorEmail: override@example.com
 tests:
-  ignition-main-with-bastion:
+  ignition-cluster:
     parameters:
-      EnableBastion: "true"
-    template: ./templates/ignition-main.template.yaml
+      EnableClientVPN: "true"
+    template: ./templates/ignition-cluster-main.template.yaml
     regions:
       - us-west-1
-  ignition-main-no-bastion:
+      - ca-central-1
+  ignition-standalone:
     parameters:
-      EnableBastion: "false"
-    template: ./templates/ignition-main.template.yaml
+      EnableBastion: "true"
+    template: ./templates/ignition-standalone-main.template.yaml
     regions:
       - eu-west-1
+      - eu-west-2

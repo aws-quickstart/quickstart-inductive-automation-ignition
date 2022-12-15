@@ -167,21 +167,13 @@ Parameters:
   DBEngineVersion:
     Description: Select Database Engine Version
     Type: String
-    Default: 11.9
+    Default: 12.12
     AllowedValues:
-      - 9.6.16
-      - 9.6.17
-      - 9.6.18
-      - 9.6.19
-      - 10.11
-      - 10.12
-      - 10.13
-      - 10.14
-      - 11.6
-      - 11.7
-      - 11.8
-      - 11.9
-      - 12.4
+      - 11.17
+      - 12.12
+      - 13.8
+      - 14.5
+
   DBInstanceClass:
     AllowedPattern: "db\\.[a-z0-9]*\\.[a-z0-9]*"
     ConstraintDescription: "Must select a valid database instance type."
@@ -285,7 +277,7 @@ Parameters:
       - "false"
     Default: "false"
     Description: "If true, the EC2 instance will use OpenSSL to generate client VPN server and client certificates."
-    Type: String  
+    Type: String
   LicenseAgreement:
     Description: I have read and agree to the license terms (IASLA) for Ignition by Inductive Automation (https://inductiveautomation.com/ignition/license).
     Type: String
@@ -334,7 +326,7 @@ Parameters:
     MaxLength: 64
     MinLength: 8
     NoEcho: True
-    Type: String      
+    Type: String
   IgnitionRootPassword2:
     AllowedPattern: >-
       ^(?=^.{8,255}$)(?=.*[a-z])(?=.*[A-Z])(?=.*\d)((?=.*[^A-Za-z0-9])(?!.*[@/"'])).*$
@@ -344,7 +336,7 @@ Parameters:
     MaxLength: 64
     MinLength: 8
     NoEcho: True
-    Type: String    
+    Type: String
   EnableEventSubscription:
     AllowedValues:
       - "true"
@@ -405,7 +397,7 @@ Resources:
   BackendGWUUID:
     Type: AWS::SSM::Parameter
     Properties:
-      Name: !Sub 
+      Name: !Sub
             - /${ParentStackName}/${gwname}/gwuuid
             - gwname: Backend
       Description: Parameter to hold the backend Ignition redundant backup UUID
@@ -414,7 +406,7 @@ Resources:
   BackendGWCert:
     Type: AWS::SSM::Parameter
     Properties:
-      Name: !Sub 
+      Name: !Sub
             - /${ParentStackName}/${gwname}/gwcert
             - gwname: Backend
       Description: Parameter to hold the backend Ignition redundant backup certificate
@@ -423,7 +415,7 @@ Resources:
   BackendGWKey:
     Type: AWS::SSM::Parameter
     Properties:
-      Name: !Sub 
+      Name: !Sub
             - /${ParentStackName}/${gwname}/gwkey
             - gwname: Backend
       Description: Parameter to hold the backend Ignition redundant backup private key
@@ -432,7 +424,7 @@ Resources:
   Frontend1GWUUID:
     Type: AWS::SSM::Parameter
     Properties:
-      Name: !Sub 
+      Name: !Sub
             - /${ParentStackName}/${gwname}/gwuuid
             - gwname: Frontend1
       Description: Parameter to hold the frontend 1 Ignition UUID
@@ -441,7 +433,7 @@ Resources:
   Frontend1GWCert:
     Type: AWS::SSM::Parameter
     Properties:
-      Name: !Sub 
+      Name: !Sub
             - /${ParentStackName}/${gwname}/gwcert
             - gwname: Frontend1
       Description: Parameter to hold the frontend 1 Ignition certificate
@@ -450,7 +442,7 @@ Resources:
   Frontend1GWKey:
     Type: AWS::SSM::Parameter
     Properties:
-      Name: !Sub 
+      Name: !Sub
             - /${ParentStackName}/${gwname}/gwkey
             - gwname: Frontend1
       Description: Parameter to hold the frontend 1 Ignition private key
@@ -459,7 +451,7 @@ Resources:
   Frontend2GWUUID:
     Type: AWS::SSM::Parameter
     Properties:
-      Name: !Sub 
+      Name: !Sub
             - /${ParentStackName}/${gwname}/gwuuid
             - gwname: Frontend2
       Description: Parameter to hold the frontend 2 Ignition UUID
@@ -468,7 +460,7 @@ Resources:
   Frontend2GWCert:
     Type: AWS::SSM::Parameter
     Properties:
-      Name: !Sub 
+      Name: !Sub
             - /${ParentStackName}/${gwname}/gwcert
             - gwname: Frontend2
       Description: Parameter to hold the frontend 2 Ignition certificate
@@ -477,7 +469,7 @@ Resources:
   Frontend2GWKey:
     Type: AWS::SSM::Parameter
     Properties:
-      Name: !Sub 
+      Name: !Sub
             - /${ParentStackName}/${gwname}/gwkey
             - gwname: Frontend2
       Description: Parameter to hold the frontend 2 Ignition private key
@@ -582,17 +574,17 @@ Resources:
         IgnitionGANInCertificateGatewayName: ''
         IgnitionGANIncomingGatewayNameForRedundancy: Backend
         IgnitionGANIncomingIPAddressForRedundancy: !Ref BackendBackupPrivateIPAddress
-        IgnitionGANIncomingHostnameForRedundancy: !Sub 
+        IgnitionGANIncomingHostnameForRedundancy: !Sub
           - 'ip-${iptohost}.${AWS::Region}.compute.internal'
           - iptohost: !Join [ '-', !Split [ '.', !Ref BackendBackupPrivateIPAddress ] ]
         IgnitionGANIncomingGatewayName1: Frontend1
         IgnitionGANIncomingIPAddress1: !Ref Frontend1PrivateIPAddress
-        IgnitionGANIncomingHostname1: !Sub 
+        IgnitionGANIncomingHostname1: !Sub
           - 'ip-${iptohost}.${AWS::Region}.compute.internal'
           - iptohost: !Join [ '-', !Split [ '.', !Ref Frontend1PrivateIPAddress ] ]
         IgnitionGANIncomingGatewayName2: Frontend2
         IgnitionGANIncomingIPAddress2: !Ref Frontend2PrivateIPAddress
-        IgnitionGANIncomingHostname2: !Sub 
+        IgnitionGANIncomingHostname2: !Sub
           - 'ip-${iptohost}.${AWS::Region}.compute.internal'
           - iptohost: !Join [ '-', !Split [ '.', !Ref Frontend2PrivateIPAddress ] ]
         EnablePublic: false
@@ -776,12 +768,12 @@ Resources:
       ProtocolVersion: HTTP1
       VpcId: !Ref VPCID
       IpAddressType: ipv4
-      TargetGroupAttributes: 
+      TargetGroupAttributes:
         - Key: stickiness.enabled
           Value: true
         - Key: stickiness.type
-          Value: lb_cookie        
-      Targets: 
+          Value: lb_cookie
+      Targets:
         - Id: !GetAtt
           - IgnitionFrontend1Stack
           - Outputs.InstanceId
@@ -803,10 +795,10 @@ Resources:
       UnhealthyThresholdCount: 2
   IgnitionLoadBalancerListener80:
     Type: 'AWS::ElasticLoadBalancingV2::Listener'
-    Properties: 
-      DefaultActions: 
+    Properties:
+      DefaultActions:
         - Type: redirect
-          RedirectConfig: 
+          RedirectConfig:
             Port: 443
             Protocol: HTTPS
             StatusCode: HTTP_301
@@ -819,8 +811,8 @@ Resources:
       DomainName: !Ref IgnitionDomainName
   IgnitionLoadBalancerListener443:
     Type: 'AWS::ElasticLoadBalancingV2::Listener'
-    Properties: 
-      DefaultActions: 
+    Properties:
+      DefaultActions:
         - Type: forward
           TargetGroupArn: !Ref IgnitionLoadBalancerTargetGroup
       LoadBalancerArn: !Ref IgnitionLoadBalancer
@@ -828,7 +820,7 @@ Resources:
       Protocol: HTTPS
       SslPolicy: ELBSecurityPolicy-TLS-1-2-2017-01
       Certificates:
-        - CertificateArn: !Ref IgnitionLoadBalancerCertificate    
+        - CertificateArn: !Ref IgnitionLoadBalancerCertificate
 Outputs:
   DBName:
     Description: "Amazon Aurora database name"
