@@ -243,7 +243,6 @@ Parameters:
     Type: String
   NotificationList:
     Type: String
-    Default: 'db-ops@domain.com'
     Description: The Email notification is used to configure a SNS topic for sending cloudwatch alarm and RDS Event notifications
     AllowedPattern: '^(([^<>()\[\]\\.,;:\s@"]+(\.[^<>()\[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$'
     ConstraintDescription: provide a valid email address.
@@ -256,7 +255,6 @@ Parameters:
     - '-'
     ConstraintDescription: must answer 'I agree'
   IgnitionDomainName:
-    Default: demo.acmeinc.com
     Description: The public domain name to use for generating a SSL certificate on the load balancer
     Type: String
   IgnitionInstanceType:
@@ -470,7 +468,6 @@ Resources:
         - S3Region: !If [UsingDefaultBucket, !Ref 'AWS::Region', !Ref QSS3BucketRegion]
           S3Bucket: !If [UsingDefaultBucket, !Sub '${QSS3BucketName}-${AWS::Region}', !Ref QSS3BucketName]
       Parameters:
-        ParentStackName: !Ref 'AWS::StackName'
         VPCID: !GetAtt
           - VPCStack
           - Outputs.VPCID
