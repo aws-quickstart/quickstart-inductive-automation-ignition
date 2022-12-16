@@ -19,7 +19,7 @@ project:
   - eu-west-3
   parameters:
     AvailabilityZones: $[taskcat_genaz_2]
-    DBEngineVersion: "12.12"
+    DBEngineVersion: "14.5"
     DBMasterUserPassword: A-$[taskcat_random-string]2!
     DBMasterUserPassword2: $[taskcat_getval_DBMasterUserPassword]
     IgnitionRootPassword: $[taskcat_getval_DBMasterUserPassword]
@@ -34,14 +34,15 @@ project:
     IgnitionNodesDesiredCapacity: 1
     IgnitionNodesMinSize: 1
 tests:
-  ignition-cluster:
-    parameters:
-      EnableClientVPN: "true"
-      IgnitionDomainName: igdemo-$[taskcat_random-string].t.quickstart.awspartner.com
-    template: ./templates/ignition-cluster-main.template.yaml
-    regions:
-      - us-west-1
-      - ca-central-1
+  # This configuration requires the certificate validation to be manually done
+#  ignition-cluster:
+#    parameters:
+#      EnableClientVPN: "true"
+#      IgnitionDomainName: igdemo-$[taskcat_random-string].t.quickstart.awspartner.com
+#    template: ./templates/ignition-cluster-main.template.yaml
+#    regions:
+#      - us-west-1
+#      - ca-central-1
   ignition-standalone:
     parameters:
       EnableBastion: "true"

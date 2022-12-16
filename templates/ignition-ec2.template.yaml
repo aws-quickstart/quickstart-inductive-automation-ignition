@@ -165,7 +165,7 @@ Parameters:
       - "false"
     Default: "false"
     Description: "If true, the EC2 instance will use OpenSSL to generate client VPN server and client certificates."
-    Type: String  
+    Type: String
   KeyPairName:
     ConstraintDescription: "Name of an existing EC2 key pair."
     Description: Name of an existing public/private key pair, for connecting to your instance.
@@ -223,7 +223,7 @@ Parameters:
     MaxLength: 64
     MinLength: 8
     NoEcho: True
-    Type: String   
+    Type: String
   IgnitionRootPassword2:
     AllowedPattern: >-
       ^(?=^.{8,255}$)(?=.*[a-z])(?=.*[A-Z])(?=.*\d)((?=.*[^A-Za-z0-9])(?!.*[@/"'])).*$
@@ -233,7 +233,7 @@ Parameters:
     MaxLength: 64
     MinLength: 8
     NoEcho: True
-    Type: String  
+    Type: String
   IgnitionRedundantMode:
     AllowedValues:
       - "independent"
@@ -270,7 +270,7 @@ Parameters:
     MaxLength: 64
     MinLength: 8
     NoEcho: True
-    Type: String 
+    Type: String
   IgnitionPostgreSQLPassword2:
     AllowedPattern: >-
       ^(?=^.{8,255}$)(?=.*[a-z])(?=.*[A-Z])(?=.*\d)((?=.*[^A-Za-z0-9])(?!.*[@/"'])).*$
@@ -280,7 +280,7 @@ Parameters:
     MaxLength: 64
     MinLength: 8
     NoEcho: True
-    Type: String 
+    Type: String
   IgnitionGANOutgoingHostname:
     Description: The hostname of the Ignition server to create an outgoing Gateway Network connection. Leave blank for no initial connection.
     Type: String
@@ -289,34 +289,34 @@ Parameters:
     Type: String
   IgnitionGANSecurityGatewayNames:
     Description: The Gateway Names (comma separated) for all allowed Ignition Gateways in the Gateway Network. Leave blank for no initial Gateways.
-    Type: String   
+    Type: String
   IgnitionGANInCertificateGatewayName:
     Description: The Gateway Name to grab certificate and UUID from SSM parameter store. Leave blank to generate self signed certificate for Gateway Network.
-    Type: String   
+    Type: String
   IgnitionGANIncomingGatewayNameForRedundancy:
     Description: The Gateway Name for redundant backup to auto approve. Leave blank to ignore.
-    Type: String 
+    Type: String
   IgnitionGANIncomingIPAddressForRedundancy:
     Description: The private IP address for redundant backup to auto approve. Leave blank to ignore.
-    Type: String 
+    Type: String
   IgnitionGANIncomingHostnameForRedundancy:
     Description: The private hostname for redundant backup to auto approve. Leave blank to ignore.
-    Type: String   
+    Type: String
   IgnitionGANIncomingGatewayName1:
     Description: The first incoming Gateway Name to auto approve. Leave blank to ignore.
-    Type: String 
+    Type: String
   IgnitionGANIncomingIPAddress1:
     Description: The first incoming private IP address to auto approve. Leave blank to ignore.
-    Type: String 
+    Type: String
   IgnitionGANIncomingHostname1:
     Description: The first incoming private hostname to auto approve. Leave blank to ignore.
-    Type: String   
+    Type: String
   IgnitionGANIncomingGatewayName2:
     Description: The second incoming Gateway Name to auto approve. Leave blank to ignore.
-    Type: String 
+    Type: String
   IgnitionGANIncomingIPAddress2:
     Description: The second incoming private IP address to auto approve. Leave blank to ignore.
-    Type: String 
+    Type: String
   IgnitionGANIncomingHostname2:
     Description: The second incoming private hostname to auto approve. Leave blank to ignore.
     Type: String
@@ -326,7 +326,7 @@ Parameters:
       - "false"
     Default: "true"
     Description: "If true, the EC2 instance will have a public IP address."
-    Type: String  
+    Type: String
   QSS3BucketName:
     AllowedPattern: "^[0-9a-zA-Z]+([0-9a-zA-Z-]*[0-9a-zA-Z])*$"
     ConstraintDescription: "Quick Start bucket name can include numbers, lowercase letters, uppercase letters, and hyphens (-). It cannot start or end with a hyphen (-)."
@@ -429,7 +429,7 @@ Resources:
       Monitoring: true
       IamInstanceProfile: !Ref 'IgnitionInstanceRoleProfile'
       InstanceType: !Ref 'IgnitionInstanceType'
-      NetworkInterfaces: 
+      NetworkInterfaces:
         - AssociatePublicIpAddress: !Ref 'EnablePublic'
           DeviceIndex: 0
           GroupSet:
@@ -443,7 +443,7 @@ Resources:
       UserData: !Base64
         Fn::Sub: |
             #!/bin/bash
-            wget "http://files.inductiveautomation.com/aws-quick-starts/creation_v2.sh"
+            aws s3 cp s3://${QSS3BucketName}/${QSS3KeyPrefix}scripts/creation_v2.sh .
             sudo chmod +x creation_v2.sh
             sudo ./creation_v2.sh --stackname "${ParentStackName}" --gwname "${IgnitionGatewayName}" --gwusername "${IgnitionRootUsername}" --gwpassword "${IgnitionRootPassword}" --redundancyrole "${IgnitionRedundantMode}" --masterip "${IgnitionRedundantHostname}" --dbip "${IgnitionPostgreSQLHostname}" --dbport "${IgnitionPostgreSQLPort}" --dbschema "${IgnitionPostgreSQLSchema}" --dbusername "${IgnitionPostgreSQLUsername}" --dbpassword "${IgnitionPostgreSQLPassword}" --ganoutgoingip "${IgnitionGANOutgoingHostname}" --ganoutgoinggwname "${IgnitionGANOutgoingGatewayName}" --gansecuritygwnames "${IgnitionGANSecurityGatewayNames}" --gancertingwname "${IgnitionGANInCertificateGatewayName}" --ganincominggwname1 "${IgnitionGANIncomingGatewayNameForRedundancy}" --ganincomingip1 "${IgnitionGANIncomingIPAddressForRedundancy}" --ganincominghost1 "${IgnitionGANIncomingHostnameForRedundancy}" --ganincominggwname2 "${IgnitionGANIncomingGatewayName1}" --ganincomingip2 "${IgnitionGANIncomingIPAddress1}" --ganincominghost2 "${IgnitionGANIncomingHostname1}" --ganincominggwname3 "${IgnitionGANIncomingGatewayName2}" --ganincomingip3 "${IgnitionGANIncomingIPAddress2}" --ganincominghost3 "${IgnitionGANIncomingHostname2}" --generateclientvpncerts "${GenerateClientVPNCerts}"
             sudo rm creation_v2.sh
