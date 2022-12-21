@@ -5,7 +5,7 @@ In the following steps, you connect to {partner-product-short-name} through a we
 
 Connect to the {partner-product-short-name} console:
 
-. Locate the URL for the {partner-product-short-name} console. If you launched a standalone template, locate the public IP or hostname for the primary Ignition instance on the Outputs tab. If you launched a cluster template, either use your custom domain name or locate the load balancer URL on the Outputs tab.
+. Locate the URL for the {partner-product-short-name} console. If you launched a standalone template, locate the public IP or hostname for the primary Ignition instance on the Outputs tab. If you launched a cluster template, use your domain name to access Ignition through the Load Balancer.
 +
 Example: https://50.60.70.80
 
