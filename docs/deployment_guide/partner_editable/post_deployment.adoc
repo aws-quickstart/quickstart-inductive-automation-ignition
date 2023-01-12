@@ -20,20 +20,14 @@ _Note: If you are using the cluster template and specified a custom domain name,
 [#connection_error1]
 .Connection error when accessing Ignition console
 [link=../images/connection_error1.png]
-image::../images/Unsafe_Warning.jpg[image]
+image::../docs/deployment_guide/images/Unsafe_Warning.jpg[image]
 . Sign in to Ignition's configuration and start developing!
 
-=== Standalone: Access to Configuration
-If you are using the standalone template you can access Ignition's Gateway and Designer directly using the public IPs found in the Outputs tab. You can also SSH into the EC2 servers directly for further troubleshooting or to patch Ignition. If you enabled the Bastion host, you can only SSH into the EC2 instances via the Bastion host for extra security. You must use a Bastion host to access the Aurora database in the private subnet. Otherwise, you can access the database through Ignition (Designer query browser).
+=== Standalone deployment: access to Ignition
+If you are using the standalone template you can access Ignition's Gateway and Designer directly using the public IPs found in the Outputs tab. You can also SSH into the EC2 servers directly for further troubleshooting or to patch Ignition. If you enabled the bastion host, you can only SSH into the EC2 instances via the bastion host for extra security. You must use a bastion host to access the Aurora database in the private subnet. Otherwise, you can access the database through Ignition (Designer query browser).
 
-=== Cluster: Access to Configuration
-If you are using the cluster template you will not be able to log in to Ignition's Gateway or Designer from the internet. All the servers are located in the private subnet. The frontend servers are attached to the load balancer, but they are not directly exposed to the internet.
-
-To access the EC2 instances and Aurora database, use the AWS Client VPN to create a secure tunnel into the AWS VPC. Follow these steps:
-
-. Download a VPN client application. You can connect to a Client VPN endpoint and establish a VPN connection using the AWS provided client or another OpenVPN-based client application. We recommend using https://openvpn.net/community-downloads[OpenVPN GUI^].
-. Download the Client VPN endpoint configuration file. Follow the https://docs.aws.amazon.com/vpn/latest/clientvpn-admin/cvpn-getting-started.html#cvpn-getting-started-config[instructions here^]. Locate the CA cert, client key, and client cert in the Resources tab of the template. It links over to the SSM parameter that stores the certs. Copy and paste the values into your configuration file in the appropriate areas.
-. Connect to the Client VPN endpoint. Import the configuration file into your VPN client application and connect. You can access Ignition directly using the private IP found on the Outputs. You can also SSH into the EC2 instances.
+=== Cluster deployment: access to Ignition
+If you are using the cluster template you will not be able to log in to Ignition's Gateway or Designer from the internet. All the servers are located in the private subnet. The frontend servers are attached to the load balancer, but they are not directly exposed to the internet. Follow https://docs.aws.amazon.com/vpn/latest/clientvpn-admin/cvpn-getting-started.html[Getting started with Client VPN^] instructions to access the EC2 instances and Aurora database.
 
 === SSH into EC2 Instances
 Follow https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/AccessingInstancesLinux.html[these instructions^] to connect to your Linux instances using SSH. The templates use Amazon Linux AMIs. The username is `ec2-user`.

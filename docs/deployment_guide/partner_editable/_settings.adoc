@@ -1,12 +1,11 @@
-:quickstart-project-name: quickstart-inductive-automation-ignition
-:quickstart-github-org: Inductive Automation
+:partner-solution-project-name: quickstart-inductive-automation-ignition
+:partner-solution-github-org: aws-quickstart
 :partner-product-name: Ignition by Inductive Automation
 :partner-product-short-name: Ignition
 :partner-company-name: Inductive Automation
-:doc-month: November
-:doc-year: 2022
+:doc-month: February
+:doc-year: 2023
 :partner-contributors: Travis Cox, {partner-company-name}
-:aws-contributors: Vinod Shukla, AWS Quick Start team
-:deployment_time_standalone: 30 minutes
-:deployment_time_cluster: 1 hour
+:aws-contributors: Vinod Shukla, AWS Integration & Automation team
+:deployment_time: 1 hour
 :default_deployment_region: us-east-1

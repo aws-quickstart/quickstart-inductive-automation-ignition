@@ -1,9 +1,9 @@
-There is no cost to use this Quick Start, but you will be billed for any AWS services or resources that this Quick Start deploys. For more information, refer to the https://fwd.aws/rA69w?[AWS Quick Start General Information Guide^].
+There is no cost to use this Partner Solution, but you will be billed for any AWS services or resources that this Partner Solution deploys. For more information, refer to the https://fwd.aws/rA69w?[AWS Partner Solution General Information Guide^].
 
-This Quick Start builds the Ignition environment by using a pre-built Amazon Machine Image (AMI) with Ignition installed on an Amazon Linux operating system.
+This Partner Solution builds the Ignition environment by using a pre-built Amazon Machine Image (AMI) with Ignition installed on an Amazon Linux operating system.
 
-This deployment requires an Ignition license. To purchase a license please contact Inductive Automation at (916) 456-1045. Visit Ignition's https://inductiveautomation.com/pricing/ignition[pricing page^] for more information and to get an online quote. 
+This deployment requires an Ignition license. To purchase a license please contact Inductive Automation at (916) 456-1045. Visit Ignition's https://inductiveautomation.com/pricing/ignition[pricing page^] for more information and to get an online quote.
 
 If you don't have a license, Ignition will run in a 2-hour trial period. The Ignition trial has the same functionality as a fully licensed Ignition installation so you can build and test your full application before spending a dime. Just activate your license when you are ready.
 
-The https://inductiveautomation.com/ignition/license[Inductive Automation software license agreement^] details the licensing terms. When you launch this Quick Start, you are asked to read and agree to the terms.
+The https://inductiveautomation.com/ignition/license[Inductive Automation software license agreement^] details the licensing terms. When you launch this Partner Solution, you are asked to read and agree to the terms.
