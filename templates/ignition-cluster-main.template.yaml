@@ -15,6 +15,7 @@ Metadata:
       Parameters:
       - KeyPairName
       - AvailabilityZones
+      - WebAccessCIDR
     - Label:
         default: Client VPN configuration
       Parameters:
@@ -92,6 +93,8 @@ Metadata:
         default: SNS notification email
       KeyPairName:
         default: Key Name
+      WebAccessCIDR:
+        default: Web access CIDR
       LicenseAgreement:
         default: IASLA Agreement
       IgnitionDomainName:
@@ -115,6 +118,11 @@ Parameters:
     ConstraintDescription: "Name of an existing EC2 key pair."
     Description: Name of an existing public/private key pair, for connecting to your instance.
     Type: "AWS::EC2::KeyPair::KeyName"
+  WebAccessCIDR:
+    AllowedPattern: ^(([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])\.){3}([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])(\/(0|1[6-9]|2[0-8]))$
+    ConstraintDescription: CIDR block parameter must be in the form x.x.x.x/x
+    Description: CIDR block for web access to the Load Balancer.
+    Type: String
   QSS3BucketName:
     AllowedPattern: "^[0-9a-zA-Z]+([0-9a-zA-Z-]*[0-9a-zA-Z])*$"
     ConstraintDescription: "Quick Start bucket name can include numbers, lowercase letters, uppercase letters, and hyphens (-). It cannot start or end with a hyphen (-)."
@@ -420,6 +428,7 @@ Resources:
         VPCCIDR: !GetAtt
           - VPCStack
           - Outputs.VPCCIDR
+        WebAccessCIDR: !Ref WebAccessCIDR
         BackendPrimaryPrivateIPAddress: 10.0.0.10
         BackendBackupPrivateIPAddress: 10.0.32.10
         Frontend1PrivateIPAddress: 10.0.0.11

@@ -21,6 +21,7 @@ Metadata:
       - KeyPairName
       - BastionSecurityGroupID
       - VPCCIDR
+      - WebAccessCIDR
       - PrivateSubnet1ID
       - PrivateSubnet2ID
       - PublicSubnet1ID
@@ -114,6 +115,8 @@ Metadata:
         default: VPC ID
       VPCCIDR:
         default: VPC CIDR
+      WebAccessCIDR:
+        default: Web access CIDR
       EnableEventSubscription:
         default: Enable Event Subscription
       NotificationList:
@@ -257,6 +260,11 @@ Parameters:
     ConstraintDescription: CIDR block parameter must be in the form x.x.x.x/16-28
     Default: 10.0.0.0/16
     Description: CIDR block of the existing VPC.
+    Type: String
+  WebAccessCIDR:
+    AllowedPattern: ^(([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])\.){3}([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])(\/(0|1[6-9]|2[0-8]))$
+    ConstraintDescription: CIDR block parameter must be in the form x.x.x.x/x
+    Description: CIDR block for web access to the Load Balancer.
     Type: String
   KeyPairName:
     ConstraintDescription: "Name of an existing EC2 key pair."
@@ -473,13 +481,13 @@ Resources:
             ToPort: 22
             SourceSecurityGroupId: !Ref 'BastionSecurityGroupID'
           - IpProtocol: tcp
-            FromPort: 443
-            ToPort: 443
-            CidrIp: 0.0.0.0/0
+            FromPort: 22
+            ToPort: 22
+            CidrIp: !Ref WebAccessCIDR
         - IpProtocol: tcp
           FromPort: 443
           ToPort: 443
-          CidrIp: 0.0.0.0/0
+          CidrIp: !Ref WebAccessCIDR
         - IpProtocol: tcp
           FromPort: 8060
           ToPort: 8060
