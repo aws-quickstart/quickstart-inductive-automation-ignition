@@ -1,14 +1,12 @@
-:quickstart-project-name: quickstart-repo-name
-:quickstart-github-org: aws-quickstart
-:partner-product-name: Full Product Name
-:partner-product-short-name: Product Name
-:partner-company-name: Example Company Name, Ltd.
-:doc-month: January
+:quickstart-project-name: quickstart-inductive-automation-ignition
+:quickstart-github-org: Inductive Automation
+:partner-product-name: Ignition by Inductive Automation
+:partner-product-short-name: Ignition
+:partner-company-name: Inductive Automation
+:doc-month: November
 :doc-year: 2022
-:partner-contributors: John Smith, {partner-company-name}
-// :other-contributors: Akua Mansa, Trek10
-:aws-contributors: Janine Singh, AWS IoT Partner team
-:aws-ia-contributors: Toni Jones, AWS Integration & Automation team
-:deployment_time: 15 minutes
+:partner-contributors: Travis Cox, {partner-company-name}
+:aws-contributors: Vinod Shukla, AWS Quick Start team
+:deployment_time_standalone: 30 minutes
+:deployment_time_cluster: 1 hour
 :default_deployment_region: us-east-1
-// :private_repo:

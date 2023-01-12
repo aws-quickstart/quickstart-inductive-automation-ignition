@@ -1,5 +1,3 @@
-This Quick Start deploys {partner-product-name} on the AWS Cloud. This guide covers the steps necessary to deploy this Quick Start.
+This Quick Start reference deployment guide provides step-by-step instructions for deploying {partner-product-name} on the AWS Cloud.
 
-// For advanced information about the product, troubleshooting, or additional functionality, refer to the https://{quickstart-github-org}.github.io/{quickstart-project-name}/operational/index.html[Operational Guide^].
-
-// For information about using this Quick Start for migrations, refer to the https://{quickstart-github-org}.github.io/{quickstart-project-name}/migration/index.html[Migration Guide^].
+This Quick Start is for Ignition architects who require guidance on how to configure, deploy, and run Ignition on AWS. It deploys Ignition in either a standalone or cluster environment that is designed to be secure and highly available. Ignition is configured with best practices for security, Gateway Network connections, database connectivity, and more. You can simply focus on starting to build out your Ignition project.

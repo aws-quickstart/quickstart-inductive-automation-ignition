@@ -1,0 +1,15 @@
+Ignition is the world's first truly universal industrial application platform because it empowers you to connect all of the data across your entire enterprise, rapidly develop any type of industrial automation system, and scale your system in any way, without limits. Here are the amazing features that make Ignition the first and only universal Industrial Application Platform:
+
+* Add unlimited clients, screens, tags, connections, and devices at no additional cost.
+* Easily deploy clients from a central server at one site, multiple sites, or in the cloud.
+* Use integrated software modules to build any kind of industrial application to fit your processes.
+* Installs on any major operating system including mobile OSes like iOS and Android.
+* Use powerful visualization modules to view clients on any device, including desktops, industrial displays, and mobile devices.
+* Based on easy-to-support IT standards like SQL, Python, MQTT, and OPC UA.
+* Connects to any major database and PLC, bridging the gap between IT and OT.
+* One integrated development environment to build applications for HMI, SCADA, MES, and more.
+* Get all your tools in one place so you can build and deploy applications quickly and easily.
+
+Ignition's modular architecture makes it easy to customize your system by building the exact industrial automation applications you need. Its server-centric web-deployment model is flexible enough for any architecture and scalable enough for companies of any size. Ignition's power and flexibility make it perfect for SCADA, IIoT and MES systems that work together seamlessly on one platform.
+
+For more information, see the https://inductiveautomation.com/ignition/platform[Ignition product page^].
