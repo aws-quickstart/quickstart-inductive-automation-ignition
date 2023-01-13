@@ -1,0 +1,884 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: "This templates sets up an Ignition cluster in an existing AWS VPC (qs-ign00lbf5)"
+Metadata:
+  LICENSE: Apache License Version 2.0
+  cfn-lint:
+    config:
+      ignore_checks:
+        - E9101
+        - W9002
+        - W9003
+  AWS::CloudFormation::Interface:
+    ParameterGroups:
+    - Label:
+        default: Stack
+      Parameters:
+      - ParentStackName
+    - Label:
+        default: Network Configuration
+      Parameters:
+      - VPCID
+      - KeyPairName
+      - VPCCIDR
+      - WebAccessCIDR
+      - PrivateSubnet1ID
+      - PrivateSubnet2ID
+      - PublicSubnet1ID
+      - PublicSubnet2ID
+      - BackendPrimaryPrivateIPAddress
+      - BackendBackupPrivateIPAddress
+      - Frontend1PrivateIPAddress
+      - Frontend2PrivateIPAddress
+      - GenerateClientVPNCerts
+    - Label:
+        default: Database Configuration
+      Parameters:
+      - DBName
+      - DBAutoMinorVersionUpgrade
+      - DBBackupRetentionPeriod
+      - DBEngineVersion
+      - DBInstanceClass
+      - DBMasterUsername
+      - DBMasterUserPassword
+      - DBMasterUserPassword2
+      - DBPort
+      - DBMultiAZ
+      - DBAllocatedStorageEncrypted
+      - DBExportLogToCloudwatch
+      - EnableEventSubscription
+      - NotificationList
+    - Label:
+        default: Ignition Configuration
+      Parameters:
+      - LicenseAgreement
+      - IgnitionDomainName
+      - IgnitionInstanceType
+      - IgnitionRootUsername
+      - IgnitionRootPassword
+      - IgnitionRootPassword2
+    - Label:
+        default: Quick Start Configuration
+      Parameters:
+      - QSS3BucketName
+      - QSS3BucketRegion
+      - QSS3KeyPrefix
+    ParameterLabels:
+      ParentStackName:
+        default: Primary Cloud Formation stack name
+      DBName:
+        default: Database name
+      DBEngineVersion:
+        default: Database Engine Version
+      DBAllocatedStorageEncrypted:
+        default: Database encryption enabled
+      DBExportLogToCloudwatch:
+        default: Export Database Log to Cloudwatch
+      DBAutoMinorVersionUpgrade:
+        default: Database auto minor version upgrade
+      DBBackupRetentionPeriod:
+        default: Database backup retention period
+      DBInstanceClass:
+        default: Database instance class
+      DBMasterUsername:
+        default: Database master username
+      DBMasterUserPassword:
+        default: Database master password
+      DBMasterUserPassword2:
+        default: Database master password (verification)
+      DBPort:
+        default: Database port
+      DBMultiAZ:
+        default: Multi-AZ deployment
+      QSS3BucketName:
+        default: Quick Start S3 bucket name
+      QSS3BucketRegion:
+        default: Quick Start S3 bucket region
+      QSS3KeyPrefix:
+        default: Quick Start S3 key prefix
+      PrivateSubnet1ID:
+        default: Private subnet 1 ID
+      PrivateSubnet2ID:
+        default: Private subnet 2 ID
+      PublicSubnet1ID:
+        default: Public subnet 1 ID
+      PublicSubnet2ID:
+        default: Public subnet 2 ID
+      BackendPrimaryPrivateIPAddress:
+        default: EC2 backend primary private IP address
+      BackendBackupPrivateIPAddress:
+        default: EC2 backend backup private IP address
+      Frontend1PrivateIPAddress:
+        default: EC2 frontend 1 private IP address
+      Frontend2PrivateIPAddress:
+        default: EC2 frontend 2 private IP address
+      KeyPairName:
+        default: Key name
+      VPCID:
+        default: VPC ID
+      VPCCIDR:
+        default: VPC CIDR
+      WebAccessCIDR:
+        default: Web access CIDR
+      EnableEventSubscription:
+        default: Enable Event Subscription
+      NotificationList:
+        default: SNS notification email
+      GenerateClientVPNCerts:
+        default: Generate Client VPN server/client certificates
+      LicenseAgreement:
+        default: IASLA Agreement
+      IgnitionDomainName:
+        default: Ignition domain name
+      IgnitionInstanceType:
+        default: Ignition instance type
+      IgnitionRootUsername:
+        default: Ignition root account username
+      IgnitionRootPassword:
+        default: Ignition root account password
+      IgnitionRootPassword2:
+        default: Ignition root account password (verification)
+Parameters:
+  ParentStackName:
+    Type: String
+    Description: Primary Cloud Formation stack name
+    Default: IgnitionClusterStack
+  DBAllocatedStorageEncrypted:
+    Default: "true"
+    AllowedValues:
+      - "true"
+      - "false"
+    Description: Whether or not to encrypt the database.
+    Type: String
+  DBExportLogToCloudwatch:
+    Default: "true"
+    AllowedValues:
+      - "true"
+      - "false"
+    Description: Whether or not to export Database logs to Cloudwatch
+    Type: String
+  DBAutoMinorVersionUpgrade:
+    AllowedValues:
+      - "true"
+      - "false"
+    Default: "false"
+    Description: "Select true to set up auto minor version upgrade."
+    Type: String
+  DBBackupRetentionPeriod:
+    Default: "35"
+    Description: "The number of days for which automatic database snapshots are retained."
+    Type: String
+  DBEngineVersion:
+    Description: Select Database Engine Version
+    Type: String
+    Default: 14.5
+    AllowedValues:
+      - 11.17
+      - 12.12
+      - 13.8
+      - 14.5
+
+  DBInstanceClass:
+    AllowedPattern: "db\\.[a-z0-9]*\\.[a-z0-9]*"
+    ConstraintDescription: "Must select a valid database instance type."
+    Default: db.r5.large
+    Description: "The name of the compute and memory capacity class of the database instance."
+    Type: String
+  DBMasterUserPassword:
+    AllowedPattern: >-
+      ^(?=^.{8,255}$)(?=.*[a-z])(?=.*[A-Z])(?=.*\d)((?=.*[^A-Za-z0-9])(?!.*[@/"'])).*$
+    ConstraintDescription: >-
+      Min 8 chars. Must include 1 uppercase, 1 lowercase, 1 number, 1 (non / @ " ') symbol
+    Description: "The database admin account password."
+    MaxLength: "64"
+    MinLength: "8"
+    NoEcho: "True"
+    Type: String
+  DBMasterUserPassword2:
+    AllowedPattern: >-
+      ^(?=^.{8,255}$)(?=.*[a-z])(?=.*[A-Z])(?=.*\d)((?=.*[^A-Za-z0-9])(?!.*[@/"'])).*$
+    ConstraintDescription: >-
+      Min 8 chars. Must include 1 uppercase, 1 lowercase, 1 number, 1 (non / @ " ') symbol
+    Description: "The database admin account password (verification)."
+    MaxLength: "64"
+    MinLength: "8"
+    NoEcho: "True"
+    Type: String
+  DBMasterUsername:
+    AllowedPattern: "[a-zA-Z][a-zA-Z0-9]*"
+    ConstraintDescription: "Must begin with a letter and contain only alphanumeric characters."
+    Default: pgadmin
+    Description: "The database admin account username."
+    MaxLength: "16"
+    MinLength: "1"
+    Type: String
+  DBPort:
+    Default: 5432
+    Description: "The port the instance will listen for connections on."
+    Type: Number
+    ConstraintDescription: 'Must be in the range [1115-65535].'
+    MinValue: 1150
+    MaxValue: 65535
+  DBMultiAZ:
+    AllowedValues:
+      - "true"
+      - "false"
+    Default: "true"
+    Description: "Specifies if the database instance is a multiple Availability Zone deployment."
+    Type: String
+  DBName:
+    AllowedPattern: "[a-zA-Z0-9]*"
+    Description: "Name of the Amazon Aurora database."
+    MaxLength: "64"
+    MinLength: "0"
+    Default: 'AuroraPostgresDB'
+    Type: String
+  PrivateSubnet1ID:
+    Description: The ID of the private subnet in Availability Zone 1.
+    Type: 'AWS::EC2::Subnet::Id'
+  PrivateSubnet2ID:
+    Description: The ID of the private subnet in Availability Zone 2.
+    Type: 'AWS::EC2::Subnet::Id'
+  PublicSubnet1ID:
+    Description: The ID of the public subnet in Availability Zone 1.
+    Type: 'AWS::EC2::Subnet::Id'
+  PublicSubnet2ID:
+    Description: The ID of the public subnet in Availability Zone 2.
+    Type: 'AWS::EC2::Subnet::Id'
+  BackendPrimaryPrivateIPAddress:
+    Default: 10.0.0.10
+    Description: EC2 private IP address for backend primary Ignition
+    Type: String
+  BackendBackupPrivateIPAddress:
+    Default: 10.0.32.10
+    Description: EC2 private IP address for backend backup Ignition
+    Type: String
+  Frontend1PrivateIPAddress:
+    Default: 10.0.0.11
+    Description: EC2 private IP address for frontend 1 Ignition
+    Type: String
+  Frontend2PrivateIPAddress:
+    Default: 10.0.32.11
+    Description: EC2 private IP address for frontend 2 Ignition
+    Type: String
+  VPCID:
+    Description: "ID of the VPC you are deploying Aurora into (e.g., vpc-0343606e)."
+    Type: 'AWS::EC2::VPC::Id'
+    Default: ''
+  VPCCIDR:
+    AllowedPattern: ^(([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])\.){3}([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])(\/(1[6-9]|2[0-8]))$
+    ConstraintDescription: CIDR block parameter must be in the form x.x.x.x/16-28
+    Default: 10.0.0.0/16
+    Description: CIDR block of the existing VPC.
+    Type: String
+  WebAccessCIDR:
+    AllowedPattern: ^(([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])\.){3}([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])(\/(0|1[6-9]|2[0-8]))$
+    ConstraintDescription: CIDR block parameter must be in the form x.x.x.x/x
+    Description: CIDR block for web access to the Load Balancer.
+    Type: String
+  KeyPairName:
+    ConstraintDescription: "Name of an existing EC2 key pair."
+    Description: Name of an existing public/private key pair, for connecting to your instance.
+    Type: "AWS::EC2::KeyPair::KeyName"
+  GenerateClientVPNCerts:
+    AllowedValues:
+      - "true"
+      - "false"
+    Default: "false"
+    Description: "If true, the EC2 instance will use OpenSSL to generate client VPN server and client certificates."
+    Type: String
+  LicenseAgreement:
+    Description: I have read and agree to the license terms (IASLA) for Ignition by Inductive Automation (https://inductiveautomation.com/ignition/license).
+    Type: String
+    Default: '-'
+    AllowedValues:
+    - I agree
+    - '-'
+    ConstraintDescription: must answer 'I agree'
+  IgnitionDomainName:
+    Description: The public domain name to use for generating a SSL certificate on the load balancer
+    Type: String
+  IgnitionInstanceType:
+    AllowedValues:
+      - t2.nano
+      - t2.micro
+      - t2.small
+      - t2.medium
+      - t2.large
+      - t2.xlarge
+      - t2.2xlarge
+      - t3.nano
+      - t3.micro
+      - t3.small
+      - t3.medium
+      - t3.large
+      - t3.xlarge
+      - t3.2xlarge
+      - m5.large
+      - m5.xlarge
+      - m5.2xlarge
+      - m5.4xlarge
+    ConstraintDescription: Must contain valid instance type
+    Default: m5.large
+    Description: Amazon EC2 instance type for the Ignition instances.
+    Type: String
+  IgnitionRootUsername:
+    Default: admin
+    Description: The username for the Ignition root account.
+    Type: String
+  IgnitionRootPassword:
+    AllowedPattern: >-
+      ^(?=^.{8,255}$)(?=.*[a-z])(?=.*[A-Z])(?=.*\d)((?=.*[^A-Za-z0-9])(?!.*[@/"'])).*$
+    ConstraintDescription: >-
+      Min 8 chars. Must include 1 uppercase, 1 lowercase, 1 number, 1 (non / @ " ') symbol
+    Description: The password for the Ignition root account.
+    MaxLength: 64
+    MinLength: 8
+    NoEcho: True
+    Type: String
+  IgnitionRootPassword2:
+    AllowedPattern: >-
+      ^(?=^.{8,255}$)(?=.*[a-z])(?=.*[A-Z])(?=.*\d)((?=.*[^A-Za-z0-9])(?!.*[@/"'])).*$
+    ConstraintDescription: >-
+      Min 8 chars. Must include 1 uppercase, 1 lowercase, 1 number, 1 (non / @ " ') symbol
+    Description: The password for the Ignition root account (verification).
+    MaxLength: 64
+    MinLength: 8
+    NoEcho: True
+    Type: String
+  EnableEventSubscription:
+    AllowedValues:
+      - "true"
+      - "false"
+    Default: "true"
+    Description: "Enables event subscription to Notification List"
+    Type: String
+  NotificationList:
+    Type: String
+    Description: The email notification used to configure an SNS topic for sending CloudWatch alarm and RDS event notifications.
+    AllowedPattern: '^(([^<>()\[\]\\.,;:\s@"]+(\.[^<>()\[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$'
+    ConstraintDescription: Provide a valid email address.
+  QSS3BucketName:
+    AllowedPattern: "^[0-9a-zA-Z]+([0-9a-zA-Z-]*[0-9a-zA-Z])*$"
+    ConstraintDescription: "Quick Start bucket name can include numbers, lowercase letters, uppercase letters, and hyphens (-). It cannot start or end with a hyphen (-)."
+    Default: aws-quickstart
+    Description: "S3 bucket name for the Quick Start assets. Quick Start bucket name can include numbers, lowercase letters, uppercase letters, and hyphens (-). It cannot start or end with a hyphen (-)."
+    Type: String
+  QSS3BucketRegion:
+    Default: 'us-east-1'
+    Description: 'The AWS Region where the Quick Start S3 bucket (QSS3BucketName) is hosted. When using your own bucket, you must specify this value.'
+    Type: String
+  QSS3KeyPrefix:
+    AllowedPattern: "^[0-9a-zA-Z-/]*$"
+    ConstraintDescription: "Quick Start key prefix can include numbers, lowercase letters, uppercase letters, hyphens (-), and forward slash (/)."
+    Default: quickstart-inductive-automation-ignition/
+    Description: "S3 key prefix for the Quick Start assets. Quick Start key prefix can include numbers, lowercase letters, uppercase letters, hyphens (-), and forward slash (/)."
+    Type: String
+Rules:
+  LicenseAgreementRule:
+    Assertions:
+    - Assert:
+        Fn::Contains:
+        - - I agree
+        - Ref: LicenseAgreement
+      AssertDescription: User must agree to the terms of the license agreement.
+  DBPasswordRule:
+    Assertions:
+    - Assert:
+        Fn::Equals:
+        - Ref: DBMasterUserPassword
+        - Ref: DBMasterUserPassword2
+      AssertDescription: Database master user passwords do not match.
+  IgnitionRootPasswordRule:
+    Assertions:
+    - Assert:
+        Fn::Equals:
+        - Ref: IgnitionRootPassword
+        - Ref: IgnitionRootPassword2
+      AssertDescription: Ignition root user passwords do not match.
+Conditions:
+  UseDatabaseEncryption:
+    !Equals
+    - !Ref DBAllocatedStorageEncrypted
+    - "true"
+  UsingDefaultBucket: !Equals [!Ref QSS3BucketName, 'aws-quickstart']
+Resources:
+  BackendGWUUID:
+    Type: AWS::SSM::Parameter
+    Properties:
+      Name: !Sub
+            - /${ParentStackName}/${gwname}/gwuuid
+            - gwname: Backend
+      Description: Parameter to hold the backend Ignition redundant backup UUID
+      Type: String
+      Value: '-'
+  BackendGWCert:
+    Type: AWS::SSM::Parameter
+    Properties:
+      Name: !Sub
+            - /${ParentStackName}/${gwname}/gwcert
+            - gwname: Backend
+      Description: Parameter to hold the backend Ignition redundant backup certificate
+      Type: String
+      Value: '-'
+  BackendGWKey:
+    Type: AWS::SSM::Parameter
+    Properties:
+      Name: !Sub
+            - /${ParentStackName}/${gwname}/gwkey
+            - gwname: Backend
+      Description: Parameter to hold the backend Ignition redundant backup private key
+      Type: String
+      Value: '-'
+  Frontend1GWUUID:
+    Type: AWS::SSM::Parameter
+    Properties:
+      Name: !Sub
+            - /${ParentStackName}/${gwname}/gwuuid
+            - gwname: Frontend1
+      Description: Parameter to hold the frontend 1 Ignition UUID
+      Type: String
+      Value: '-'
+  Frontend1GWCert:
+    Type: AWS::SSM::Parameter
+    Properties:
+      Name: !Sub
+            - /${ParentStackName}/${gwname}/gwcert
+            - gwname: Frontend1
+      Description: Parameter to hold the frontend 1 Ignition certificate
+      Type: String
+      Value: '-'
+  Frontend1GWKey:
+    Type: AWS::SSM::Parameter
+    Properties:
+      Name: !Sub
+            - /${ParentStackName}/${gwname}/gwkey
+            - gwname: Frontend1
+      Description: Parameter to hold the frontend 1 Ignition private key
+      Type: String
+      Value: '-'
+  Frontend2GWUUID:
+    Type: AWS::SSM::Parameter
+    Properties:
+      Name: !Sub
+            - /${ParentStackName}/${gwname}/gwuuid
+            - gwname: Frontend2
+      Description: Parameter to hold the frontend 2 Ignition UUID
+      Type: String
+      Value: '-'
+  Frontend2GWCert:
+    Type: AWS::SSM::Parameter
+    Properties:
+      Name: !Sub
+            - /${ParentStackName}/${gwname}/gwcert
+            - gwname: Frontend2
+      Description: Parameter to hold the frontend 2 Ignition certificate
+      Type: String
+      Value: '-'
+  Frontend2GWKey:
+    Type: AWS::SSM::Parameter
+    Properties:
+      Name: !Sub
+            - /${ParentStackName}/${gwname}/gwkey
+            - gwname: Frontend2
+      Description: Parameter to hold the frontend 2 Ignition private key
+      Type: String
+      Value: '-'
+  AuroraStack:
+    Type: AWS::CloudFormation::Stack
+    Properties:
+      TemplateURL:
+        !Sub
+        - 'https://${S3Bucket}.s3.${S3Region}.${AWS::URLSuffix}/${QSS3KeyPrefix}submodules/quickstart-amazon-aurora-postgresql/templates/aurora_postgres.template.yaml'
+        - S3Region: !If [UsingDefaultBucket, !Ref 'AWS::Region', !Ref QSS3BucketRegion]
+          S3Bucket: !If [UsingDefaultBucket, !Sub '${QSS3BucketName}-${AWS::Region}', !Ref QSS3BucketName]
+      Parameters:
+        Subnet1ID: !Ref PrivateSubnet1ID
+        Subnet2ID: !Ref PrivateSubnet2ID
+        VPCID: !Ref VPCID
+        DBName: !Ref DBName
+        DBAutoMinorVersionUpgrade: !Ref DBAutoMinorVersionUpgrade
+        DBAllocatedStorageEncrypted: !Ref DBAllocatedStorageEncrypted
+        DBExportLogToCloudwatch: !Ref DBExportLogToCloudwatch
+        DBBackupRetentionPeriod: !Ref DBBackupRetentionPeriod
+        DBEngineVersion: !Ref DBEngineVersion
+        DBInstanceClass: !Ref DBInstanceClass
+        DBMasterUsername: !Ref DBMasterUsername
+        DBMasterUserPassword: !Ref DBMasterUserPassword
+        DBPort: !Ref DBPort
+        DBMultiAZ: !Ref DBMultiAZ
+        DBAccessCIDR: !Ref VPCCIDR
+        EnableEventSubscription: !Ref EnableEventSubscription
+        NotificationList: !Ref NotificationList
+  IgnitionSecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: Allow access to the Workload instances
+      VpcId: !Ref 'VPCID'
+      SecurityGroupIngress:
+        - IpProtocol: tcp
+          FromPort: 22
+          ToPort: 22
+          CidrIp: !Ref VPCCIDR
+        - IpProtocol: tcp
+          FromPort: 8060
+          ToPort: 8060
+          CidrIp: !Ref VPCCIDR
+        - IpProtocol: tcp
+          FromPort: 443
+          ToPort: 443
+          CidrIp: !Ref VPCCIDR
+  LBSecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: Allow access to the LB
+      VpcId: !Ref 'VPCID'
+      SecurityGroupIngress:
+        - IpProtocol: tcp
+          FromPort: 80
+          ToPort: 80
+          CidrIp: !Ref WebAccessCIDR
+        - IpProtocol: tcp
+          FromPort: 443
+          ToPort: 443
+          CidrIp: !Ref WebAccessCIDR
+  IgnitionBackendPrimaryStack:
+    Type: 'AWS::CloudFormation::Stack'
+    DependsOn: AuroraStack
+    Properties:
+      TemplateURL:
+        !Sub
+        - 'https://${S3Bucket}.s3.${S3Region}.${AWS::URLSuffix}/${QSS3KeyPrefix}templates/ignition-ec2.template.yaml'
+        - S3Region: !If [ UsingDefaultBucket, !Ref 'AWS::Region', !Ref QSS3BucketRegion ]
+          S3Bucket: !If [ UsingDefaultBucket, !Sub '${QSS3BucketName}-${AWS::Region}', !Ref QSS3BucketName ]
+      Parameters:
+        ParentStackName: !Ref ParentStackName
+        IgnitionSecurityGroupID: !GetAtt
+          - IgnitionSecurityGroup
+          - GroupId
+        KeyPairName: !Ref KeyPairName
+        SubnetID: !Ref PrivateSubnet1ID
+        PrivateIPAddress: !Ref BackendPrimaryPrivateIPAddress
+        GenerateClientVPNCerts: !Ref GenerateClientVPNCerts
+        LicenseAgreement: !Ref LicenseAgreement
+        IgnitionInstanceType: !Ref IgnitionInstanceType
+        IgnitionInstanceName: Ignition Backend Master
+        IgnitionGatewayName: Backend
+        IgnitionRootUsername: !Ref IgnitionRootUsername
+        IgnitionRootPassword: !Ref IgnitionRootPassword
+        IgnitionRootPassword2: !Ref IgnitionRootPassword2
+        IgnitionRedundantMode: master
+        IgnitionRedundantHostname: ''
+        IgnitionPostgreSQLHostname: !GetAtt
+          - AuroraStack
+          - Outputs.RDSEndPointAddress
+        IgnitionPostgreSQLPort: !Ref DBPort
+        IgnitionPostgreSQLSchema: !Ref DBName
+        IgnitionPostgreSQLUsername: !Ref DBMasterUsername
+        IgnitionPostgreSQLPassword: !Ref DBMasterUserPassword
+        IgnitionPostgreSQLPassword2: !Ref DBMasterUserPassword2
+        IgnitionGANOutgoingHostname: ''
+        IgnitionGANOutgoingGatewayName: ''
+        IgnitionGANSecurityGatewayNames: 'Frontend1,Frontend2'
+        IgnitionGANInCertificateGatewayName: ''
+        IgnitionGANIncomingGatewayNameForRedundancy: Backend
+        IgnitionGANIncomingIPAddressForRedundancy: !Ref BackendBackupPrivateIPAddress
+        IgnitionGANIncomingHostnameForRedundancy: !Sub
+          - 'ip-${iptohost}.${AWS::Region}.compute.internal'
+          - iptohost: !Join [ '-', !Split [ '.', !Ref BackendBackupPrivateIPAddress ] ]
+        IgnitionGANIncomingGatewayName1: Frontend1
+        IgnitionGANIncomingIPAddress1: !Ref Frontend1PrivateIPAddress
+        IgnitionGANIncomingHostname1: !Sub
+          - 'ip-${iptohost}.${AWS::Region}.compute.internal'
+          - iptohost: !Join [ '-', !Split [ '.', !Ref Frontend1PrivateIPAddress ] ]
+        IgnitionGANIncomingGatewayName2: Frontend2
+        IgnitionGANIncomingIPAddress2: !Ref Frontend2PrivateIPAddress
+        IgnitionGANIncomingHostname2: !Sub
+          - 'ip-${iptohost}.${AWS::Region}.compute.internal'
+          - iptohost: !Join [ '-', !Split [ '.', !Ref Frontend2PrivateIPAddress ] ]
+        EnablePublic: false
+        QSS3BucketName: !Ref QSS3BucketName
+        QSS3KeyPrefix: !Sub ${QSS3KeyPrefix}
+  IgnitionBackendBackupStack:
+    Type: 'AWS::CloudFormation::Stack'
+    DependsOn: IgnitionBackendPrimaryStack
+    Properties:
+      TemplateURL:
+        !Sub
+        - 'https://${S3Bucket}.s3.${S3Region}.${AWS::URLSuffix}/${QSS3KeyPrefix}templates/ignition-ec2.template.yaml'
+        - S3Region: !If [ UsingDefaultBucket, !Ref 'AWS::Region', !Ref QSS3BucketRegion ]
+          S3Bucket: !If [ UsingDefaultBucket, !Sub '${QSS3BucketName}-${AWS::Region}', !Ref QSS3BucketName ]
+      Parameters:
+        ParentStackName: !Ref ParentStackName
+        IgnitionSecurityGroupID: !GetAtt
+          - IgnitionSecurityGroup
+          - GroupId
+        KeyPairName: !Ref KeyPairName
+        SubnetID: !Ref PrivateSubnet2ID
+        PrivateIPAddress: !Ref BackendBackupPrivateIPAddress
+        GenerateClientVPNCerts: false
+        LicenseAgreement: !Ref LicenseAgreement
+        IgnitionInstanceType: !Ref IgnitionInstanceType
+        IgnitionInstanceName: Ignition Backend Backup
+        IgnitionGatewayName: Backend
+        IgnitionRootUsername: !Ref IgnitionRootUsername
+        IgnitionRootPassword: !Ref IgnitionRootPassword
+        IgnitionRootPassword2: !Ref IgnitionRootPassword2
+        IgnitionRedundantMode: backup
+        IgnitionRedundantHostname: !GetAtt
+          - IgnitionBackendPrimaryStack
+          - Outputs.IgnitionPrivateDnsName
+        IgnitionPostgreSQLHostname: !GetAtt
+          - AuroraStack
+          - Outputs.RDSEndPointAddress
+        IgnitionPostgreSQLPort: !Ref DBPort
+        IgnitionPostgreSQLSchema: !Ref DBName
+        IgnitionPostgreSQLUsername: !Ref DBMasterUsername
+        IgnitionPostgreSQLPassword: !Ref DBMasterUserPassword
+        IgnitionPostgreSQLPassword2: !Ref DBMasterUserPassword2
+        IgnitionGANOutgoingHostname: ''
+        IgnitionGANOutgoingGatewayName: ''
+        IgnitionGANSecurityGatewayNames: 'Frontend1,Frontend2'
+        IgnitionGANInCertificateGatewayName: Backend
+        IgnitionGANIncomingGatewayNameForRedundancy: ''
+        IgnitionGANIncomingIPAddressForRedundancy: ''
+        IgnitionGANIncomingHostnameForRedundancy: ''
+        IgnitionGANIncomingGatewayName1: ''
+        IgnitionGANIncomingIPAddress1: ''
+        IgnitionGANIncomingHostname1: ''
+        IgnitionGANIncomingGatewayName2: ''
+        IgnitionGANIncomingIPAddress2: ''
+        IgnitionGANIncomingHostname2: ''
+        EnablePublic: false
+        QSS3BucketName: !Ref QSS3BucketName
+        QSS3KeyPrefix: !Sub ${QSS3KeyPrefix}
+  IgnitionFrontend1Stack:
+    Type: 'AWS::CloudFormation::Stack'
+    DependsOn: IgnitionBackendBackupStack
+    Properties:
+      TemplateURL:
+        !Sub
+        - 'https://${S3Bucket}.s3.${S3Region}.${AWS::URLSuffix}/${QSS3KeyPrefix}templates/ignition-ec2.template.yaml'
+        - S3Region: !If [ UsingDefaultBucket, !Ref 'AWS::Region', !Ref QSS3BucketRegion ]
+          S3Bucket: !If [ UsingDefaultBucket, !Sub '${QSS3BucketName}-${AWS::Region}', !Ref QSS3BucketName ]
+      Parameters:
+        ParentStackName: !Ref ParentStackName
+        IgnitionSecurityGroupID: !GetAtt
+          - IgnitionSecurityGroup
+          - GroupId
+        KeyPairName: !Ref KeyPairName
+        SubnetID: !Ref PrivateSubnet1ID
+        PrivateIPAddress: !Ref Frontend1PrivateIPAddress
+        GenerateClientVPNCerts: false
+        LicenseAgreement: !Ref LicenseAgreement
+        IgnitionInstanceType: !Ref IgnitionInstanceType
+        IgnitionInstanceName: Ignition Frontend 1
+        IgnitionGatewayName: Frontend1
+        IgnitionRootUsername: !Ref IgnitionRootUsername
+        IgnitionRootPassword: !Ref IgnitionRootPassword
+        IgnitionRootPassword2: !Ref IgnitionRootPassword2
+        IgnitionRedundantMode: independent
+        IgnitionRedundantHostname: ''
+        IgnitionPostgreSQLHostname: !GetAtt
+          - AuroraStack
+          - Outputs.RDSEndPointAddress
+        IgnitionPostgreSQLPort: !Ref DBPort
+        IgnitionPostgreSQLSchema: !Ref DBName
+        IgnitionPostgreSQLUsername: !Ref DBMasterUsername
+        IgnitionPostgreSQLPassword: !Ref DBMasterUserPassword
+        IgnitionPostgreSQLPassword2: !Ref DBMasterUserPassword2
+        IgnitionGANOutgoingHostname: !Ref BackendPrimaryPrivateIPAddress
+        IgnitionGANOutgoingGatewayName: Backend
+        IgnitionGANSecurityGatewayNames: ''
+        IgnitionGANInCertificateGatewayName: Frontend1
+        IgnitionGANIncomingGatewayNameForRedundancy: ''
+        IgnitionGANIncomingIPAddressForRedundancy: ''
+        IgnitionGANIncomingHostnameForRedundancy: ''
+        IgnitionGANIncomingGatewayName1: ''
+        IgnitionGANIncomingIPAddress1: ''
+        IgnitionGANIncomingHostname1: ''
+        IgnitionGANIncomingGatewayName2: ''
+        IgnitionGANIncomingIPAddress2: ''
+        IgnitionGANIncomingHostname2: ''
+        EnablePublic: false
+        QSS3BucketName: !Ref QSS3BucketName
+        QSS3KeyPrefix: !Sub ${QSS3KeyPrefix}
+  IgnitionFrontend2Stack:
+    Type: 'AWS::CloudFormation::Stack'
+    DependsOn: IgnitionBackendBackupStack
+    Properties:
+      TemplateURL:
+        !Sub
+        - 'https://${S3Bucket}.s3.${S3Region}.${AWS::URLSuffix}/${QSS3KeyPrefix}templates/ignition-ec2.template.yaml'
+        - S3Region: !If [ UsingDefaultBucket, !Ref 'AWS::Region', !Ref QSS3BucketRegion ]
+          S3Bucket: !If [ UsingDefaultBucket, !Sub '${QSS3BucketName}-${AWS::Region}', !Ref QSS3BucketName ]
+      Parameters:
+        ParentStackName: !Ref ParentStackName
+        IgnitionSecurityGroupID: !GetAtt
+          - IgnitionSecurityGroup
+          - GroupId
+        KeyPairName: !Ref KeyPairName
+        SubnetID: !Ref PrivateSubnet2ID
+        PrivateIPAddress: !Ref Frontend2PrivateIPAddress
+        GenerateClientVPNCerts: false
+        LicenseAgreement: !Ref LicenseAgreement
+        IgnitionInstanceType: !Ref IgnitionInstanceType
+        IgnitionInstanceName: Ignition Frontend 2
+        IgnitionGatewayName: Frontend2
+        IgnitionRootUsername: !Ref IgnitionRootUsername
+        IgnitionRootPassword: !Ref IgnitionRootPassword
+        IgnitionRootPassword2: !Ref IgnitionRootPassword2
+        IgnitionRedundantMode: independent
+        IgnitionRedundantHostname: ''
+        IgnitionPostgreSQLHostname: !GetAtt
+          - AuroraStack
+          - Outputs.RDSEndPointAddress
+        IgnitionPostgreSQLPort: !Ref DBPort
+        IgnitionPostgreSQLSchema: !Ref DBName
+        IgnitionPostgreSQLUsername: !Ref DBMasterUsername
+        IgnitionPostgreSQLPassword: !Ref DBMasterUserPassword
+        IgnitionPostgreSQLPassword2: !Ref DBMasterUserPassword2
+        IgnitionGANOutgoingHostname: !Ref BackendPrimaryPrivateIPAddress
+        IgnitionGANOutgoingGatewayName: Backend
+        IgnitionGANSecurityGatewayNames: ''
+        IgnitionGANInCertificateGatewayName: Frontend2
+        IgnitionGANIncomingGatewayNameForRedundancy: ''
+        IgnitionGANIncomingIPAddressForRedundancy: ''
+        IgnitionGANIncomingHostnameForRedundancy: ''
+        IgnitionGANIncomingGatewayName1: ''
+        IgnitionGANIncomingIPAddress1: ''
+        IgnitionGANIncomingHostname1: ''
+        IgnitionGANIncomingGatewayName2: ''
+        IgnitionGANIncomingIPAddress2: ''
+        IgnitionGANIncomingHostname2: ''
+        EnablePublic: false
+        QSS3BucketName: !Ref QSS3BucketName
+        QSS3KeyPrefix: !Sub ${QSS3KeyPrefix}
+  IgnitionLoadBalancer:
+    Type: 'AWS::ElasticLoadBalancingV2::LoadBalancer'
+    Properties:
+      IpAddressType: ipv4
+      Name: IgnitionFrontendLB
+      Scheme: internet-facing
+      Type: application
+      SecurityGroups:
+        - !GetAtt
+          - LBSecurityGroup
+          - GroupId
+      Subnets:
+        - !Ref PublicSubnet1ID
+        - !Ref PublicSubnet2ID
+  IgnitionLoadBalancerTargetGroup:
+    Type: 'AWS::ElasticLoadBalancingV2::TargetGroup'
+    Properties:
+      Name: IgnitionFrontendTargetGroup
+      Port: 443
+      Protocol: HTTPS
+      ProtocolVersion: HTTP1
+      VpcId: !Ref VPCID
+      IpAddressType: ipv4
+      TargetGroupAttributes:
+        - Key: stickiness.enabled
+          Value: true
+        - Key: stickiness.type
+          Value: lb_cookie
+      Targets:
+        - Id: !GetAtt
+          - IgnitionFrontend1Stack
+          - Outputs.InstanceId
+          Port: 443
+        - Id: !GetAtt
+          - IgnitionFrontend2Stack
+          - Outputs.InstanceId
+          Port: 443
+      Matcher:
+        HttpCode: '200,301,302'
+      TargetType: instance
+      HealthCheckEnabled: true
+      HealthCheckIntervalSeconds: 30
+      HealthCheckPath: /
+      HealthCheckPort: 443
+      HealthCheckProtocol: HTTPS
+      HealthCheckTimeoutSeconds: 5
+      HealthyThresholdCount: 5
+      UnhealthyThresholdCount: 2
+  IgnitionLoadBalancerListener80:
+    Type: 'AWS::ElasticLoadBalancingV2::Listener'
+    Properties:
+      DefaultActions:
+        - Type: redirect
+          RedirectConfig:
+            Port: 443
+            Protocol: HTTPS
+            StatusCode: HTTP_301
+      LoadBalancerArn: !Ref IgnitionLoadBalancer
+      Port: 80
+      Protocol: HTTP
+  IgnitionLoadBalancerCertificate:
+    Type: 'AWS::CertificateManager::Certificate'
+    Properties:
+      DomainName: !Ref IgnitionDomainName
+  IgnitionLoadBalancerListener443:
+    Type: 'AWS::ElasticLoadBalancingV2::Listener'
+    Properties:
+      DefaultActions:
+        - Type: forward
+          TargetGroupArn: !Ref IgnitionLoadBalancerTargetGroup
+      LoadBalancerArn: !Ref IgnitionLoadBalancer
+      Port: 443
+      Protocol: HTTPS
+      SslPolicy: ELBSecurityPolicy-TLS-1-2-2017-01
+      Certificates:
+        - CertificateArn: !Ref IgnitionLoadBalancerCertificate
+Outputs:
+  DBName:
+    Description: "Amazon Aurora database name"
+    Value: !Ref DBName
+  DBMasterUsername:
+    Description: "Amazon Aurora database master username"
+    Value: !GetAtt AuroraStack.Outputs.DBMasterUsername
+  RDSEndPointAddress:
+    Description: "Amazon Aurora write endpoint"
+    Value: !GetAtt AuroraStack.Outputs.RDSEndPointAddress
+  RDSReadEndPointAddress:
+    Description: "Amazon Aurora read endpoint"
+    Value: !GetAtt AuroraStack.Outputs.RDSReadEndPointAddress
+  RDSEndPointPort:
+    Description: "Amazon Aurora port"
+    Value: !GetAtt AuroraStack.Outputs.RDSEndPointPort
+  RDSEndPoints:
+    Description: "Full Amazon Aurora write endpoint"
+    Value: !GetAtt AuroraStack.Outputs.RDSEndPoints
+  RDSEncryptionKey:
+    Condition: UseDatabaseEncryption
+    Description: The alias of the encryption key created for RDS
+    Value: !GetAtt AuroraStack.Outputs.RDSEncryptionKey
+  IgnitionBackendPrimaryPrivateDnsName:
+    Description: "Private DNS name for Ignition's EC2 instance"
+    Value: !GetAtt IgnitionBackendPrimaryStack.Outputs.IgnitionPrivateDnsName
+  IgnitionBackendPrimaryPrivateIP:
+    Description: "Private IP address for Ignition's EC2 instance"
+    Value: !GetAtt IgnitionBackendPrimaryStack.Outputs.IgnitionPrivateIP
+  IgnitionBackendBackupPrivateDnsName:
+    Description: "Private DNS name for Ignition's EC2 instance"
+    Value: !GetAtt IgnitionBackendBackupStack.Outputs.IgnitionPrivateDnsName
+  IgnitionBackendBackupPrivateIP:
+    Description: "Private IP address for Ignition's EC2 instance"
+    Value: !GetAtt IgnitionBackendBackupStack.Outputs.IgnitionPrivateIP
+  IgnitionFrontend1PrivateDnsName:
+    Description: "Private DNS name for Ignition's EC2 instance"
+    Value: !GetAtt IgnitionFrontend1Stack.Outputs.IgnitionPrivateDnsName
+  IgnitionFrontend1PrivateIP:
+    Description: "Private IP address for Ignition's EC2 instance"
+    Value: !GetAtt IgnitionFrontend1Stack.Outputs.IgnitionPrivateIP
+  IgnitionFrontend2PrivateDnsName:
+    Description: "Private DNS name for Ignition's EC2 instance"
+    Value: !GetAtt IgnitionFrontend2Stack.Outputs.IgnitionPrivateDnsName
+  IgnitionFrontend2PrivateIP:
+    Description: "Private IP address for Ignition's EC2 instance"
+    Value: !GetAtt IgnitionFrontend2Stack.Outputs.IgnitionPrivateIP
+  IgnitionDomainName:
+    Description: Ignition domain name
+    Value: !Ref IgnitionDomainName
+  IgnitionLoadBalancerARecord:
+    Description: A record for AWS Load Balancer
+    Value: !GetAtt IgnitionLoadBalancer.DNSName
