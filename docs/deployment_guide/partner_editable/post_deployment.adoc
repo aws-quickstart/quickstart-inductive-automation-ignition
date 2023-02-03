@@ -1,33 +1,26 @@
 == Postdeployment steps
-When the AWS CloudFormation template successfully creates the stack, all server nodes run with the software installed in your AWS account.
 
-In the following steps, you connect to {partner-product-short-name} through a web console to verify and explore the deployment.
-
-Connect to the {partner-product-short-name} console:
-
-. Locate the URL for the {partner-product-short-name} console. If you launched a standalone template, locate the public IP or hostname for the primary Ignition instance on the Outputs tab. If you launched a cluster template, use your domain name to access Ignition through the Load Balancer.
-+
-Example: https://50.60.70.80
-
-[start=2]
-. Ignition's web server is initially configured to use a self-signed certificate, so your browser may display the warning shown in <<connection_error1>>.
-+
-We recommend that you update the self-signed certificate to a certificate that's signed by a trusted certificate authority (CA). For more information about setting up certificates, see https://docs.inductiveautomation.com/pages/viewpage.action?pageId=58611186[Ignition Secure Communication^].
-+
-_Note: If you are using the cluster template and specified a custom domain name, the SSL certificate will be trusted by Amazon's root CA and requires no further action._
-+
 :xrefstyle: short
+
+After deploying the stack, connect and sign in to the {partner-product-short-name} web console to verify the deployment and begin developing.
+
+* For a standalone deployment, connect to a public IP or hostname provided on the stack's *Outputs* tab in the https://us-east-1.console.aws.amazon.com/cloudformation/home?region=us-east-1#/[AWS CloudFormation console^].
+
+* For a cluster deployment, connect to your domain name to access Ignition through the deployed load balancer (for example, `\https://50.60.70.80`).
+
+Ignition's web server is initially configured to use a self-signed certificate. Your browser may display a warning like the one shown <<connection_error1>>. Choose *Proceed* to continue.
+
 [#connection_error1]
-.Connection error when accessing Ignition console
+.NET::ERR_CERT_AUTHORITY_INVALID error (Google Chrome)
 [link=../images/connection_error1.png]
-image::../docs/deployment_guide/images/Unsafe_Warning.jpg[image]
-. Sign in to Ignition's configuration and start developing!
+image::../docs/deployment_guide/images/ERR_CERT_AUTHORITY_INVALID.png[image]
 
-=== Standalone deployment: access to Ignition
-If you are using the standalone template you can access Ignition's Gateway and Designer directly using the public IPs found in the Outputs tab. You can also SSH into the EC2 servers directly for further troubleshooting or to patch Ignition. If you enabled the bastion host, you can only SSH into the EC2 instances via the bastion host for extra security. You must use a bastion host to access the Aurora database in the private subnet. Otherwise, you can access the database through Ignition (Designer query browser).
+For a cluster deployment, the Amazon root certificate authority (CA) trusts the SSL certificate generated from the domain name you specify. For a standalone deployment, we recommend that you update the self-signed certificate to a certificate signed by a trusted CA. For more information, refer to https://docs.inductiveautomation.com/pages/viewpage.action?pageId=58611186[Secure Communication (SSL / TLS)^].
 
-=== Cluster deployment: access to Ignition
-If you are using the cluster template you will not be able to log in to Ignition's Gateway or Designer from the internet. All the servers are located in the private subnet. The frontend servers are attached to the load balancer, but they are not directly exposed to the internet. Follow https://docs.aws.amazon.com/vpn/latest/clientvpn-admin/cvpn-getting-started.html[Getting started with Client VPN^] instructions to access the EC2 instances and Aurora database.
+=== Access Ignition in a standalone deployment
+For a standalone deployment, you can access Ignition's Gateway and Designer directly using the public IPs found on the stack's *Outputs* tab in the https://us-east-1.console.aws.amazon.com/cloudformation/home?region=us-east-1#/[AWS CloudFormation console^]. You can also connect to the deployed EC2 servers using SSH to troubleshoot or patch Ignition.
 
-=== SSH into EC2 Instances
-Follow https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/AccessingInstancesLinux.html[these instructions^] to connect to your Linux instances using SSH. The templates use Amazon Linux AMIs. The username is `ec2-user`.
+If you chose to deploy the optional Linux bastion host, you can only connect using SSH to EC2 instances and Aurora database through the bastion host. You can access the database through Ignition using the https://docs.inductiveautomation.com/display/DOC81/Database+Query+Browser[database query browser^]. The CloudFormation templates of this Partner Solution use Amazon Linux AMIs. The username is `ec2-user`. For more information, refer to https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/AccessingInstancesLinux.html[Connect to your Linux instance using SSH^].
+
+=== Access Ignition in a cluster deployment
+For a cluster deployment, you cannot log in to Ignition Gateway or Ignition Designer from the internet. In a cluster deployment, Ignition servers are in the private subnets. Frontend servers are attached to a load balancer, but they are not directly exposed to the internet. To access the EC2 instances and Aurora database, refer to https://docs.aws.amazon.com/vpn/latest/clientvpn-admin/cvpn-getting-started.html[Getting started with Client VPN^].

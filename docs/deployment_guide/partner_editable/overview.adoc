@@ -1,3 +1,1 @@
-This Partner Solution reference deployment guide provides step-by-step instructions for deploying {partner-product-name} on the AWS Cloud.
-
-This Partner Solution is for Ignition architects who require guidance on how to configure, deploy, and run Ignition on AWS. It deploys Ignition in either a standalone or cluster environment that is designed to be secure and highly available. Ignition is configured with best practices for security, Gateway Network connections, database connectivity, and more. You can simply focus on starting to build out your Ignition project.
+This Partner Solution deploys {partner-product-name} on the AWS Cloud. If you are unfamiliar with AWS Quick Starts, refer to the https://fwd.aws/rA69w?[AWS Quick Start General Information Guide].
