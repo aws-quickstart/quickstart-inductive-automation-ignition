@@ -1,0 +1,59 @@
+:xrefstyle: short
+
+This Partner Solution provides two ways to deploy Ignition: standalone or cluster.
+
+[[standalone]]
+=== Standalone
+
+This option deploys a redundant pair of Ignition servers that are publicly available. Deploying this Partner Solution with default parameters builds the following Ignition environment in the AWS Cloud.
+
+[#architecture_standalone]
+.Partner Solution architecture for {partner-product-short-name} on AWS
+image::../docs/deployment_guide/images/architecture_standalone_diagram.png[Architecture]
+
+As shown in <<architecture_standalone>>, the standalone deployment option sets up the following:
+
+* A highly available architecture that spans two Availability Zones.*
+* A virtual private cloud (VPC) configured with public and private subnets, according to AWS best practices, to provide you with your own virtual network on AWS.*
+* In the public subnets:
+** Managed NAT gateways to allow outbound internet access for resources in the private subnets.*
+** (Optional) Linux bastion hosts in an Auto Scaling group to allow inbound Secure Shell (SSH) access to Amazon EC2 instances and Aurora database in the private subnets.*
+** (Optional) An AWS Client VPN configuration to allow direct access to Amazon EC2 instances and Aurora databases in the private subnets (not shown).*
+** A primary and secondary Ignition server in the first and second Availability Zones, respectively.
+* In the private subnets, an Amazon Aurora DB cluster in a security group containing the following:
+*** A primary DB instance supporting write operations.
+*** Two replica DB instances supporting read operations.
+* AWS Key Management Service (AWS KMS) to enable encryption at rest for the Aurora DB cluster.
+* Amazon CloudWatch for a bastion host CPU usage alarm.
+* Amazon Simple Notification Service (Amazon SNS) to send notifications when the CloudWatch alarm is invoked.
+
+[.small]#* The template that deploys this Partner Solution into an existing VPC skips the components marked by asterisks and prompts you for your existing VPC configuration.#
+
+[[cluster]]
+=== Cluster
+
+The cluster option deploys a redundant pair of Ignition backend (I/O) servers and two frontend servers behind a load balancer. Deploying this Partner Solution with default parameters builds the following Ignition environment in the AWS Cloud.
+
+[#architecture_cluster]
+.Partner Solution architecture for {partner-product-short-name} on AWS
+image::../docs/deployment_guide/images/architecture_cluster_diagram.png[Architecture]
+
+As shown in <<architecture_cluster>>, the cluster deployment option sets up the following:
+
+* A highly available architecture that spans two Availability Zones.*
+* A VPC configured with public and private subnets, according to AWS best practices, to provide you with your own virtual network on AWS.*
+* In the public subnets:
+** Managed NAT gateways to allow outbound internet access for resources in the private subnets.*
+** (Optional) An AWS Client VPN configuration to allow direct access to Amazon EC2 instances and Aurora databases in the private subnets (not shown).*
+** An Application Load Balancer configured with an Amazon SSL certificate to route traffic to Ignition frontend servers in the private subnets.
+* In the private subnets:
+** A primary and backup Ignition backend server in the first and second Availability Zones, respectively.
+** An Ignition frontend server in each Availability Zone.
+** An Aurora DB cluster in a security group containing the following:
+*** A primary DB instance supporting write operations.
+*** Two replica DB instances supporting read operations.
+* AWS KMS to enable encryption at rest for the Aurora DB cluster.
+* CloudWatch for a bastion host CPU usage alarm.
+* Amazon SNS to send notifications when the CloudWatch alarm is invoked.
+
+[.small]#* The template that deploys this Partner Solution into an existing VPC skips the components marked by asterisks and prompts you for your existing VPC configuration.#

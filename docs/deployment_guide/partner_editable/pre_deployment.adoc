@@ -1,0 +1,5 @@
+== Predeployment steps
+
+* During deployment, you must confirm that you have read and agree to the https://inductiveautomation.com/ignition/license[Inductive Automation Software License Agreement^].
+* To make the deployment available to the public internet, enter `0.0.0.0/0` for the `Web access CIDR` (`WebAccessCIDR`) parameter. Or, enter a CIDR block to limit Ignition access to a specific group of IP addresses.
+* With the cluster deployment option, you must provide your own domain name to use for the load balancer. The deployment uses the domain name you provide to generate a trusted Amazon SSL certificate, and will send the domain administrator an email to verify ownership. Ensure that you approve certificate ownership while the CloudFormation stack is being deployed. After deployment, ensure that you configure a CNAME DNS record to the Ignition domain name, found on the stack's *Outputs* tab in the https://us-east-1.console.aws.amazon.com/cloudformation/home?region=us-east-1#/[AWS CloudFormation console^].

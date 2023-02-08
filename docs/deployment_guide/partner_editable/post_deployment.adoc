@@ -1,0 +1,26 @@
+== Postdeployment steps
+
+:xrefstyle: short
+
+After deploying the stack, connect and sign in to the {partner-product-short-name} web console to verify the deployment and begin developing.
+
+* For a standalone deployment, connect to a public IP or hostname provided on the stack's *Outputs* tab in the https://us-east-1.console.aws.amazon.com/cloudformation/home?region=us-east-1#/[AWS CloudFormation console^].
+
+* For a cluster deployment, connect to your domain name to access Ignition through the deployed load balancer (for example, `\https://50.60.70.80`).
+
+Ignition's web server is initially configured to use a self-signed certificate. Your browser may display a warning like the one shown <<connection_error1>>. Choose *Proceed* to continue.
+
+[#connection_error1]
+.NET::ERR_CERT_AUTHORITY_INVALID error (Google Chrome)
+[link=../images/connection_error1.png]
+image::../docs/deployment_guide/images/ERR_CERT_AUTHORITY_INVALID.png[image]
+
+For a cluster deployment, the Amazon root certificate authority (CA) trusts the SSL certificate generated from the domain name you specify. For a standalone deployment, we recommend that you update the self-signed certificate to a certificate signed by a trusted CA. For more information, refer to https://docs.inductiveautomation.com/pages/viewpage.action?pageId=58611186[Secure Communication (SSL / TLS)^].
+
+=== Access Ignition in a standalone deployment
+For a standalone deployment, you can access Ignition's Gateway and Designer directly using the public IPs found on the stack's *Outputs* tab in the https://us-east-1.console.aws.amazon.com/cloudformation/home?region=us-east-1#/[AWS CloudFormation console^]. You can also connect to the deployed EC2 servers using SSH to troubleshoot or patch Ignition.
+
+If you chose to deploy the optional Linux bastion host, you can only connect using SSH to EC2 instances and Aurora database through the bastion host. You can access the database through Ignition using the https://docs.inductiveautomation.com/display/DOC81/Database+Query+Browser[database query browser^]. The CloudFormation templates of this Partner Solution use Amazon Linux AMIs. The username is `ec2-user`. For more information, refer to https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/AccessingInstancesLinux.html[Connect to your Linux instance using SSH^].
+
+=== Access Ignition in a cluster deployment
+For a cluster deployment, you cannot log in to Ignition Gateway or Ignition Designer from the internet. In a cluster deployment, Ignition servers are in the private subnets. Frontend servers are attached to a load balancer, but they are not directly exposed to the internet. To access the EC2 instances and Aurora database, refer to https://docs.aws.amazon.com/vpn/latest/clientvpn-admin/cvpn-getting-started.html[Getting started with Client VPN^].

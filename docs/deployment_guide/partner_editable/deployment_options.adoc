@@ -1,0 +1,15 @@
+This Partner Solution provides the following deployment options:
+
+=== Standalone
+
+* https://fwd.aws/jNAg7?[Deploy {partner-product-short-name} into a new VPC^]. This option builds a new AWS environment that consists of the VPC, subnets, NAT gateways, security groups, bastion hosts, and other infrastructure components. It then deploys {partner-product-short-name} into this new VPC.
+* https://fwd.aws/b33j7?[Deploy {partner-product-short-name} into an existing VPC^]. This option provisions {partner-product-short-name} in your existing AWS infrastructure.
+
+This Partner Solution provides separate templates for these options. It also lets you configure instance types and {partner-product-short-name} settings.
+
+=== Cluster
+
+* https://fwd.aws/JrjPJ?[Deploy {partner-product-short-name} into a new VPC^]. This option builds a new AWS environment that consists of the VPC, subnets, NAT gateways, security groups, client VPN, and other infrastructure components. It then deploys {partner-product-short-name} into this new VPC.
+* https://fwd.aws/y8WV5?[Deploy {partner-product-short-name} into an existing VPC^]. This option provisions {partner-product-short-name} in your existing AWS infrastructure.
+
+This Partner Solution provides separate templates for these options. It also lets you configure instance types and {partner-product-short-name} settings.
