@@ -61,49 +61,49 @@ Metadata:
       EnableBastion:
         default: Create bastion stack
       EnableTCPForwarding:
-        default: Enable TCP Forwarding
+        default: Enable TCP forwarding
       RemoteAccessCIDR:
         default: Permitted IP range
       DBEngineVersion:
-        default: Database Engine Version
+        default: Database engine version
       DBName:
         default: Database name
       DBAllocatedStorageEncrypted:
-        default: Database encryption enabled
+        default: Enable database encryption
       DBExportLogToCloudwatch:
-        default: Export Database Log to Cloudwatch
+        default: Export database logs to Amazon Cloudwatch
       DBAutoMinorVersionUpgrade:
-        default: Database auto minor version upgrade
+        default: Automatic minor database version upgrades
       DBBackupRetentionPeriod:
         default: Database backup retention period
       DBInstanceClass:
         default: Database instance class
       DBMasterUsername:
-        default: Database master username
+        default: Database administrator user name
       DBMasterUserPassword:
-        default: Database master password
+        default: Database administrator password
       DBMasterUserPassword2:
-        default: Database master password (verification)
+        default: Database administrator password (verification)
       DBPort:
         default: Database port
       DBMultiAZ:
         default: Multi-AZ deployment
       QSS3BucketName:
-        default: Quick Start S3 bucket name
+        default: Partner Solution S3 bucket name
       QSS3BucketRegion:
-        default: Quick Start S3 bucket region
+        default: Partner Solution S3 bucket region
       QSS3KeyPrefix:
-        default: Quick Start S3 key prefix
+        default: Partner Solution S3 key prefix
       EnableEventSubscription:
-        default: Enable Event Subscription
+        default: Enable event subscription
       NotificationList:
-        default: SNS notification email
+        default: Amazon SNS notification email
       KeyPairName:
-        default: Key Name
+        default: Key name
       WebAccessCIDR:
         default: Web access CIDR
       LicenseAgreement:
-        default: IASLA Agreement
+        default: Inductive Automation Software License Agreement
       IgnitionInstanceType:
         default: Ignition instance type
       IgnitionGatewayName:
@@ -115,7 +115,7 @@ Metadata:
       IgnitionRootPassword2:
         default: Ignition root account password (verification)
       EnableIgnitionBackup:
-        default: Enable Ignition's redundancy
+        default: Enable Ignition redundancy
 Parameters:
   AvailabilityZones:
     Description: >-
@@ -130,34 +130,53 @@ Parameters:
   WebAccessCIDR:
     AllowedPattern: ^(([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])\.){3}([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])(\/(0|1[6-9]|2[0-8]))$
     ConstraintDescription: CIDR block parameter must be in the form x.x.x.x/x
-    Description: CIDR block for web access to the Load Balancer.
+    Description: CIDR block to allow web access to the load balancer.
     Type: String
   QSS3BucketName:
-    AllowedPattern: "^[0-9a-zA-Z]+([0-9a-zA-Z-]*[0-9a-zA-Z])*$"
-    ConstraintDescription: "Quick Start bucket name can include numbers, lowercase letters, uppercase letters, and hyphens (-). It cannot start or end with a hyphen (-)."
+    AllowedPattern: ^[0-9a-z]+([0-9a-z-\.]*[0-9a-z])*$
+    ConstraintDescription: >-
+      The S3 bucket name can include numbers, lowercase letters,
+      and hyphens (-), but it cannot start or end with a hyphen.
     Default: aws-quickstart
-    Description: "S3 bucket name for the Quick Start assets. Quick Start bucket name can include numbers, lowercase letters, uppercase letters, and hyphens (-). It cannot start or end with a hyphen (-)."
+    Description: >-
+      Name of the S3 bucket for your copy of the deployment assets. Keep the default
+      name unless you are customizing the template. Changing the name updates code
+      references to point to a new location.
+    MinLength: 3
+    MaxLength: 63
     Type: String
   QSS3BucketRegion:
-    Default: 'us-east-1'
-    Description: 'The AWS Region where the Quick Start S3 bucket (QSS3BucketName) is hosted. When using your own bucket, you must specify this value.'
+    Default: us-east-1
+    Description: >-
+      AWS Region where the S3 bucket (QSS3BucketName) is hosted. Keep
+      the default Region unless you are customizing the template. Changing the Region
+      updates code references to point to a new location. When using your own bucket,
+      specify the Region.
     Type: String
   QSS3KeyPrefix:
-    AllowedPattern: "^[0-9a-zA-Z-/]*$"
-    ConstraintDescription: "Quick Start key prefix can include numbers, lowercase letters, uppercase letters, hyphens (-), and forward slash (/)."
+    AllowedPattern: ^([0-9a-zA-Z!-_\.\*'\(\)/]+/)*$
+    ConstraintDescription: >-
+      The S3 key prefix can include numbers, lowercase letters, uppercase letters,
+      hyphens (-), underscores (_), periods (.), asterisks (*), single quotes ('),
+      open parenthesis ((), close parenthesis ()), and forward slashes (/). End the
+      prefix with a forward slash.
     Default: quickstart-inductive-automation-ignition/
-    Description: "S3 key prefix for the Quick Start assets. Quick Start key prefix can include numbers, lowercase letters, uppercase letters, hyphens (-), and forward slash (/)."
+    Description: >-
+      S3 key prefix that is used to simulate a folder for your copy of the
+      deployment assets. Keep the default prefix unless you are customizing
+      the template. Changing the prefix updates code references to point to
+      a new location.
     Type: String
   EnableBastion:
     AllowedValues:
       - "true"
       - "false"
     Default: "false"
-    Description: "If true, a bastion stack will be created."
+    Description: Choose "false" if you don't want to deploy the optional bastion host stack.
     Type: String
   EnableTCPForwarding:
     Type: String
-    Description: Enable/Disable TCP Forwarding
+    Description: Choose "true" to enable TCP forwarding.
     Default: 'false'
     AllowedValues:
       - 'true'
@@ -165,35 +184,35 @@ Parameters:
   RemoteAccessCIDR:
     AllowedPattern: "^(([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])\\.){3}([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])(\\/([0-9]|[1-2][0-9]|3[0-2]))$"
     ConstraintDescription: "CIDR block parameter must be in the form x.x.x.x/x"
-    Description: "Allowed CIDR block for external SSH access."
+    Description: CIDR block to allow external SSH access.
     Type: String
   DBAllocatedStorageEncrypted:
     Default: "true"
     AllowedValues:
       - "true"
       - "false"
-    Description: Whether or not to encrypt the database.
+    Description: Choose "false" if you don't want to encrypt the database.
     Type: String
   DBExportLogToCloudwatch:
     Default: "true"
     AllowedValues:
       - "true"
       - "false"
-    Description: Whether or not to export Database logs to Cloudwatch
+    Description: Choose "false" if you don't want to export database logs to Amazon CloudWatch.
     Type: String
   DBAutoMinorVersionUpgrade:
     AllowedValues:
       - "true"
       - "false"
     Default: "false"
-    Description: "Select true to set up auto minor version upgrade."
+    Description: Choose "true" to enable automatic minor database version upgrades.
     Type: String
   DBBackupRetentionPeriod:
     Default: "35"
-    Description: "The number of days for which automatic database snapshots are retained."
+    Description: Number of days to retain automatic database snapshots.
     Type: String
   DBEngineVersion:
-    Description: Select Database Engine Version
+    Description: Database engine version.
     Type: String
     Default: 14.5
     AllowedValues:
@@ -205,12 +224,12 @@ Parameters:
     AllowedPattern: "db\\.[a-z0-9]*\\.[a-z0-9]*"
     ConstraintDescription: "Must select a valid database instance type."
     Default: db.r5.large
-    Description: "The name of the compute and memory capacity class of the database instance."
+    Description: Name of the class that determines the computation and memory capacity of the database instance.
     Type: String
   DBMasterUserPassword:
     AllowedPattern: "(?=^.{6,255}$)((?=.*\\d)(?=.*[A-Z])(?=.*[a-z])|(?=.*\\d)(?=.*[^A-Za-z0-9])(?=.*[a-z])|(?=.*[^A-Za-z0-9])(?=.*[A-Z])(?=.*[a-z])|(?=.*\\d)(?=.*[A-Z])(?=.*[^A-Za-z0-9]))^.*"
     ConstraintDescription: "Min 8 chars."
-    Description: "The database admin account password."
+    Description: Database administrator account password.
     MaxLength: "64"
     MinLength: "8"
     NoEcho: "True"
@@ -219,8 +238,8 @@ Parameters:
     AllowedPattern: >-
       ^(?=^.{8,255}$)(?=.*[a-z])(?=.*[A-Z])(?=.*\d)((?=.*[^A-Za-z0-9])(?!.*[@/"'])).*$
     ConstraintDescription: >-
-      Min 8 chars. Must include 1 uppercase, 1 lowercase, 1 number, 1 (non / @ " ') symbol
-    Description: "The database admin account password (verification)."
+      Must have a minimum of 8 characters. Must include 1 uppercase letter, 1 lowercase letter, 1 number, and 1 symbol (not including / @ " ').
+    Description: Verify the database administrator account password.
     MaxLength: "64"
     MinLength: "8"
     NoEcho: "True"
@@ -229,15 +248,15 @@ Parameters:
     AllowedPattern: "[a-zA-Z][a-zA-Z0-9]*"
     ConstraintDescription: "Must begin with a letter and contain only alphanumeric characters."
     Default: pgadmin
-    Description: "The database admin account username."
+    Description: Database administrator account user name.
     MaxLength: "16"
     MinLength: "1"
     Type: String
   DBPort:
     Default: 5432
-    Description: "The port the instance will listen for connections on."
+    Description: Database instance listener port.
     Type: Number
-    ConstraintDescription: 'Must be in the range [1115-65535].'
+    ConstraintDescription: Must be in the range 1150–65535.
     MinValue: 1150
     MaxValue: 65535
   DBMultiAZ:
@@ -245,12 +264,12 @@ Parameters:
       - "true"
       - "false"
     Default: "true"
-    Description: "Specifies if the database instance is a multiple Availability Zone deployment."
+    Description: Choose "false" if you don't want the database instance deployed to multiple Availability Zones for high availability.
     Type: String
   DBName:
     AllowedPattern: "[a-zA-Z][a-zA-Z0-9]*"
     Default: 'AuroraPostgresDB'
-    Description: "Name of the Amazon Aurora database."
+    Description: Amazon Aurora database name.
     MaxLength: "64"
     MinLength: "5"
     Type: String
@@ -259,21 +278,21 @@ Parameters:
       - "true"
       - "false"
     Default: "true"
-    Description: "Enables event subscription to Notification List"
+    Description: Choose "false" if you don't want to enable SNS topic subscription.
     Type: String
   NotificationList:
     Type: String
-    Description: The Email notification is used to configure a SNS topic for sending cloudwatch alarm and RDS Event notifications
+    Description: Email address to subscribe to the SNS topic, to receive CloudWatch alarm and Amazon RDS event notifications.
     AllowedPattern: '^(([^<>()\[\]\\.,;:\s@"]+(\.[^<>()\[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$'
     ConstraintDescription: provide a valid email address.
   LicenseAgreement:
-    Description: I have read and agree to the license terms (IASLA) for Ignition by Inductive Automation (https://inductiveautomation.com/ignition/license).
+    Description: I have read and accept the terms of the Inductive Automation Software License Agreement (https://inductiveautomation.com/ignition/license).
     Type: String
     Default: '-'
     AllowedValues:
     - I agree
     - '-'
-    ConstraintDescription: must answer 'I agree'
+    ConstraintDescription: You must choose "I agree" to complete the deployment.
   IgnitionInstanceType:
     AllowedValues:
       - t2.nano
@@ -294,25 +313,25 @@ Parameters:
       - m5.xlarge
       - m5.2xlarge
       - m5.4xlarge
-    ConstraintDescription: Must contain valid instance type
+    ConstraintDescription: You must choose a valid instance type.
     Default: m5.large
-    Description: Amazon EC2 instance type for the Ignition instances.
+    Description: Amazon EC2 instance type for Ignition instances.
     Type: String
   IgnitionGatewayName:
     AllowedPattern: "[a-zA-Z0-9]*"
     Default: Ignition
-    Description: Ignition's Gateway system name.
+    Description: Ignition Gateway system name.
     Type: String
   IgnitionRootUsername:
     Default: admin
-    Description: The username for the Ignition root account.
+    Description: Ignition root account user name.
     Type: String
   IgnitionRootPassword:
     AllowedPattern: >-
       ^(?=^.{8,255}$)(?=.*[a-z])(?=.*[A-Z])(?=.*\d)((?=.*[^A-Za-z0-9])(?!.*[@/"'])).*$
     ConstraintDescription: >-
-      Min 8 chars. Must include 1 uppercase, 1 lowercase, 1 number, 1 (non / @ " ') symbol
-    Description: The password for the Ignition root account.
+      Must have a minimum of 8 characters. Must include 1 uppercase letter, 1 lowercase letter, 1 number, and 1 symbol (not including / @ " ').
+    Description: Ignition root account password.
     MaxLength: 64
     MinLength: 8
     NoEcho: True
@@ -321,8 +340,8 @@ Parameters:
     AllowedPattern: >-
       ^(?=^.{8,255}$)(?=.*[a-z])(?=.*[A-Z])(?=.*\d)((?=.*[^A-Za-z0-9])(?!.*[@/"'])).*$
     ConstraintDescription: >-
-      Min 8 chars. Must include 1 uppercase, 1 lowercase, 1 number, 1 (non / @ " ') symbol
-    Description: The password for the Ignition root account (verification).
+      Must have a minimum of 8 characters. Must include 1 uppercase letter, 1 lowercase letter, 1 number, and 1 symbol (not including / @ " ').
+    Description: Verify the Ignition root account password.
     MaxLength: 64
     MinLength: 8
     NoEcho: True
@@ -332,7 +351,7 @@ Parameters:
       - "true"
       - "false"
     Default: "true"
-    Description: "If true, an Ignition backup EC2 instance will be created."
+    Description: Choose "false" if you don't want to deploy a backup Ignition instance.
     Type: String
 Rules:
   LicenseAgreementRule:
@@ -477,48 +496,48 @@ Resources:
         EnablePublic: true
 Outputs:
   DBName:
-    Description: "Amazon Aurora database name"
+    Description: "Amazon Aurora database name."
     Value: !Ref DBName
   DBMasterUsername:
-    Description: "Amazon Aurora database master username"
+    Description: "Amazon Aurora database administrator username."
     Value: !GetAtt IgnitionStack.Outputs.DBMasterUsername
   RDSEndPointAddress:
-    Description: "Amazon Aurora write endpoint"
+    Description: "Amazon Aurora write endpoint."
     Value: !GetAtt IgnitionStack.Outputs.RDSEndPointAddress
   RDSReadEndPointAddress:
-    Description: "Amazon Aurora read endpoint"
+    Description: "Amazon Aurora read endpoint."
     Value: !GetAtt IgnitionStack.Outputs.RDSReadEndPointAddress
   RDSEndPointPort:
-    Description: "Amazon Aurora port"
+    Description: "Amazon Aurora port."
     Value: !GetAtt IgnitionStack.Outputs.RDSEndPointPort
   RDSEndPoints:
-    Description: "Full Amazon Aurora write endpoint"
+    Description: "Full Amazon Aurora write endpoint."
     Value: !GetAtt IgnitionStack.Outputs.RDSEndPoints
   RDSEncryptionKey:
     Condition: UseDatabaseEncryption
-    Description: The alias of the encryption key created for RDS
+    Description: Alias of the encryption key created for Amazon RDS.
     Value: !GetAtt IgnitionStack.Outputs.RDSEncryptionKey
   IgnitionPrimaryPrivateDnsName:
-    Description: "Private DNS name for Ignition's EC2 instance"
+    Description: Private DNS name for Ignition EC2 instance.
     Value: !GetAtt IgnitionStack.Outputs.IgnitionPrimaryPrivateDnsName
   IgnitionPrimaryPrivateIP:
-    Description: "Private IP address for Ignition's EC2 instance"
+    Description: Private IP address for the Ignition EC2 instance.
     Value: !GetAtt IgnitionStack.Outputs.IgnitionPrimaryPrivateIP
   IgnitionPrimaryPublicDnsName:
-    Description: "Public DNS name for Ignition's EC2 instance"
+    Description: Public DNS name for the Ignition EC2 instance.
     Value: !GetAtt IgnitionStack.Outputs.IgnitionPrimaryPublicDnsName
   IgnitionPrimaryPublicIP:
-    Description: "Public IP address for Ignition's EC2 instance"
+    Description: Public IP address for the Ignition EC2 instance.
     Value: !GetAtt IgnitionStack.Outputs.IgnitionPrimaryPublicIP
   IgnitionBackupPrivateDnsName:
-    Description: "Private DNS name for Ignition's EC2 instance"
+    Description: Private DNS name for the Ignition EC2 instance.
     Value: !GetAtt IgnitionStack.Outputs.IgnitionBackupPrivateDnsName
   IgnitionBackupPrivateIP:
-    Description: "Private IP address for Ignition's EC2 instance"
+    Description: Private IP address for the Ignition EC2 instance.
     Value: !GetAtt IgnitionStack.Outputs.IgnitionBackupPrivateIP
   IgnitionBackupPublicDnsName:
-    Description: "Public DNS name for Ignition's EC2 instance"
+    Description: Public DNS name for the Ignition EC2 instance.
     Value: !GetAtt IgnitionStack.Outputs.IgnitionBackupPublicDnsName
   IgnitionBackupPublicIP:
-    Description: "Public IP address for Ignition's EC2 instance"
+    Description: Public IP address for the Ignition EC2 instance.
     Value: !GetAtt IgnitionStack.Outputs.IgnitionBackupPublicIP
