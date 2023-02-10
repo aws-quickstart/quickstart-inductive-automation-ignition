@@ -45,13 +45,13 @@ As shown in <<architecture_cluster>>, the cluster deployment option sets up the 
 * In the public subnets:
 ** Managed NAT gateways to allow outbound internet access for resources in the private subnets.*
 ** (Optional) An AWS Client VPN configuration to allow direct access to Amazon EC2 instances and Aurora databases in the private subnets (not shown).*
-** An Application Load Balancer configured with an Amazon SSL certificate to route traffic to Ignition frontend servers in the private subnets.
 * In the private subnets:
 ** A primary and backup Ignition backend server in the first and second Availability Zones, respectively.
 ** An Ignition frontend server in each Availability Zone.
 ** An Aurora DB cluster in a security group containing the following:
 *** A primary DB instance supporting write operations.
 *** Two replica DB instances supporting read operations.
+* An Application Load Balancer configured with an Amazon SSL certificate to route traffic to Ignition frontend servers in the private subnets.
 * AWS KMS to enable encryption at rest for the Aurora DB cluster.
 * CloudWatch for a bastion host CPU usage alarm.
 * Amazon SNS to send notifications when the CloudWatch alarm is invoked.
