@@ -12,7 +12,6 @@ Ignition's web server is initially configured to use a self-signed certificate. 
 
 [#connection_error1]
 .NET::ERR_CERT_AUTHORITY_INVALID error (Google Chrome)
-[link=../images/connection_error1.png]
 image::../docs/deployment_guide/images/ERR_CERT_AUTHORITY_INVALID.png[image]
 
 For a cluster deployment, the Amazon root certificate authority (CA) trusts the SSL certificate generated from the domain name you specify. For a standalone deployment, we recommend that you update the self-signed certificate to a certificate signed by a trusted CA. For more information, refer to https://docs.inductiveautomation.com/pages/viewpage.action?pageId=58611186[Secure Communication (SSL / TLS)^].
