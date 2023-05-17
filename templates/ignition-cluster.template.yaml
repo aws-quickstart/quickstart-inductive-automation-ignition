@@ -616,7 +616,7 @@ Resources:
           - iptohost: !Join [ '-', !Split [ '.', !Ref Frontend2PrivateIPAddress ] ]
         EnablePublic: false
         QSS3BucketName: !Ref QSS3BucketName
-        QSS3KeyPrefix: !Sub ${QSS3KeyPrefix}
+        QSS3KeyPrefix: !Ref QSS3KeyPrefix
   IgnitionBackendBackupStack:
     Type: 'AWS::CloudFormation::Stack'
     DependsOn: IgnitionBackendPrimaryStack
@@ -669,7 +669,7 @@ Resources:
         IgnitionGANIncomingHostname2: ''
         EnablePublic: false
         QSS3BucketName: !Ref QSS3BucketName
-        QSS3KeyPrefix: !Sub ${QSS3KeyPrefix}
+        QSS3KeyPrefix: !Ref QSS3KeyPrefix
   IgnitionFrontend1Stack:
     Type: 'AWS::CloudFormation::Stack'
     DependsOn: IgnitionBackendBackupStack
@@ -720,7 +720,7 @@ Resources:
         IgnitionGANIncomingHostname2: ''
         EnablePublic: false
         QSS3BucketName: !Ref QSS3BucketName
-        QSS3KeyPrefix: !Sub ${QSS3KeyPrefix}
+        QSS3KeyPrefix: !Ref QSS3KeyPrefix
   IgnitionFrontend2Stack:
     Type: 'AWS::CloudFormation::Stack'
     DependsOn: IgnitionBackendBackupStack
@@ -771,7 +771,7 @@ Resources:
         IgnitionGANIncomingHostname2: ''
         EnablePublic: false
         QSS3BucketName: !Ref QSS3BucketName
-        QSS3KeyPrefix: !Sub ${QSS3KeyPrefix}
+        QSS3KeyPrefix: !Ref QSS3KeyPrefix
   IgnitionLoadBalancer:
     Type: 'AWS::ElasticLoadBalancingV2::LoadBalancer'
     Properties:

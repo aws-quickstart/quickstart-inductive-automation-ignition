@@ -443,7 +443,7 @@ Resources:
       UserData: !Base64
         Fn::Sub: |
             #!/bin/bash
-            aws s3 cp s3://${QSS3BucketName}/${QSS3KeyPrefix}scripts/creation_v2.sh .
+            wget https://s3.amazonaws.com/${QSS3BucketName}/${QSS3KeyPrefix}scripts/creation_v2.sh
             sudo chmod +x creation_v2.sh
             sudo ./creation_v2.sh --stackname "${ParentStackName}" --gwname "${IgnitionGatewayName}" --gwusername "${IgnitionRootUsername}" --gwpassword "${IgnitionRootPassword}" --redundancyrole "${IgnitionRedundantMode}" --masterip "${IgnitionRedundantHostname}" --dbip "${IgnitionPostgreSQLHostname}" --dbport "${IgnitionPostgreSQLPort}" --dbschema "${IgnitionPostgreSQLSchema}" --dbusername "${IgnitionPostgreSQLUsername}" --dbpassword "${IgnitionPostgreSQLPassword}" --ganoutgoingip "${IgnitionGANOutgoingHostname}" --ganoutgoinggwname "${IgnitionGANOutgoingGatewayName}" --gansecuritygwnames "${IgnitionGANSecurityGatewayNames}" --gancertingwname "${IgnitionGANInCertificateGatewayName}" --ganincominggwname1 "${IgnitionGANIncomingGatewayNameForRedundancy}" --ganincomingip1 "${IgnitionGANIncomingIPAddressForRedundancy}" --ganincominghost1 "${IgnitionGANIncomingHostnameForRedundancy}" --ganincominggwname2 "${IgnitionGANIncomingGatewayName1}" --ganincomingip2 "${IgnitionGANIncomingIPAddress1}" --ganincominghost2 "${IgnitionGANIncomingHostname1}" --ganincominggwname3 "${IgnitionGANIncomingGatewayName2}" --ganincomingip3 "${IgnitionGANIncomingIPAddress2}" --ganincominghost3 "${IgnitionGANIncomingHostname2}" --generateclientvpncerts "${GenerateClientVPNCerts}"
             sudo rm creation_v2.sh

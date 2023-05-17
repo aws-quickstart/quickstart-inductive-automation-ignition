@@ -574,7 +574,7 @@ Resources:
         IgnitionGANIncomingHostname2: ''
         EnablePublic: !Ref EnablePublic
         QSS3BucketName: !Ref QSS3BucketName
-        QSS3KeyPrefix: !Sub ${QSS3KeyPrefix}
+        QSS3KeyPrefix: !Ref QSS3KeyPrefix
   IgnitionBackupStack:
     Condition: EnableIgnitionBackupCondition
     Type: 'AWS::CloudFormation::Stack'
@@ -631,7 +631,7 @@ Resources:
         IgnitionGANIncomingHostname2: ''
         EnablePublic: !Ref EnablePublic
         QSS3BucketName: !Ref QSS3BucketName
-        QSS3KeyPrefix: !Sub ${QSS3KeyPrefix}
+        QSS3KeyPrefix: !Ref QSS3KeyPrefix
 Outputs:
   DBName:
     Description: "Amazon Aurora database name."
